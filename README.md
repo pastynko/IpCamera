@@ -588,46 +588,7 @@ Text label="Outside Camera Group" icon="camera"{Image url="http://192.168.0.2:54
 
 ```
 
-In order to display camera hls streams side by side you can also create a webView item and link it to a HTML file in the conf/html directory as follows:
-The webView url is that of your openhab installation.
-Please note that the iOS app will currently open the streams in new full screen players, however a fix has been merged for the next app update.
 
-```
-Webview url="http://192.168.6.4:8080/static/html/file.html" height=5
-
-```
-
-```
-<!DOCTYPE html>
-<html>
-	<body>
-		<div style="width: 50%; float: left;">
-			<video playsinline autoplay muted controls style="width:100%; " src="http://192.168.6.4:50001/ipcamera.m3u8" />
-		</div>
-		<div style="width: 50%; float: left;">
-			<video playsinline autoplay muted controls style="width: 100%; " src="http://192.168.6.4:50002/ipcamera.m3u8" />
-		</div>
-		<div style="width: 50%; float: left;">
-			<video playsinline autoplay muted controls style="width:100%; " src="http://192.168.6.4:50003/ipcamera.m3u8" />
-		</div>
-		<div style="width: 50%; float: left;">
-			<video playsinline autoplay muted controls style="width: 100%; " src="http://192.168.6.4:50004/ipcamera.m3u8" />
-		</div>
-	</body>
-</html> 
-
-```
-
-*.habpanel
-
-Habpanel can be used with hls streams by adding a template widget with the following code linking to your hls stream url:
-
-```
-<span style="position:absolute; height:100%; width:100%; overflow: hidden; top: 0; left: 0;">
-<video style="width: 100%; height: 100%; position: relative; top: 0; left: 0;" src="{{itemValue('Hiska_camera1_hls')}}" controls autoplay/>
-</span>
-
-```
 
 *.rules
 
@@ -889,31 +850,11 @@ tmpfs /tmpfs tmpfs defaults,nosuid,nodev,noatime,size=20m 0 0
 ```
 
 
+**HLS Sitemap examples**
 
-Example thing file for a Dahua camera.
-
-```
-Thing ipcamera:DAHUA:001 [
-    IPADDRESS="192.168.1.2",
-    PASSWORD="password",
-    USERNAME="admin",
-    POLL_CAMERA_MS=2000,
-    SERVER_PORT=54321,
-    IP_WHITELIST="(192.168.1.120)(192.168.1.33)(192.168.1.74)",
-    IMAGE_UPDATE_EVENTS=1,
-    UPDATE_IMAGE=false,
-    FFMPEG_OUTPUT="/tmpfs/camera1/", 
-    FFMPEG_INPUT="rtsp://192.168.1.22:554/cam/realmonitor?channel=1&subtype=0"
-]
-
+The webview version allows you to zoom in on the video when using the iOS app, the Video element version does not zoom, but it will pass through myopenhab.
 
 ```
-
-
-Sitemap examples: (Note the IP is for your openHAB server not the camera)
-
-```
-Text label="Android Mjpeg Stream" icon="camera"{Video url="http://192.168.1.9:54321/ipcamera.mjpeg" encoding="mjpeg"}
 
 Text label="HLS Video Stream" icon="camera"{Video url="http://192.168.1.9:54321/ipcamera.m3u8" encoding="hls"}
 
@@ -922,10 +863,62 @@ Text label="HLS Webview Stream" icon="camera"{Webview url="http://192.168.1.9:54
 ```
 
 
+**Display multiple HLS streams side by side**
 
-**ffmpeg HLS Special settings**
+In order to display camera hls streams side by side you can also create a webView item and link it to a HTML file in the conf/html directory as follows:
+The webView url is that of your openhab installation.
+Please note that the iOS app will currently open the streams in new full screen players, however a fix has been merged for the next app update.
+
+```
+Webview url="http://192.168.6.4:8080/static/html/file.html" height=5
+
+```
+
+
+```html
+<!DOCTYPE html>
+<html>
+    <body>
+        <div style="width: 50%; float: left;">
+            <video playsinline autoplay muted controls style="width:100%; " src="http://192.168.6.4:50001/ipcamera.m3u8" />
+        </div>
+        <div style="width: 50%; float: left;">
+            <video playsinline autoplay muted controls style="width: 100%; " src="http://192.168.6.4:50002/ipcamera.m3u8" />
+        </div>
+        <div style="width: 50%; float: left;">
+            <video playsinline autoplay muted controls style="width:100%; " src="http://192.168.6.4:50003/ipcamera.m3u8" />
+        </div>
+        <div style="width: 50%; float: left;">
+            <video playsinline autoplay muted controls style="width: 100%; " src="http://192.168.6.4:50004/ipcamera.m3u8" />
+        </div>
+    </body>
+</html> 
+
+```
+
+
+**Display HLS in Habpanel**
+
+Habpanel can be used with HLS by adding a template widget with the following code linking to your HLS url's:
+
+```
+<span style="position:absolute; height:100%; width:100%; overflow: hidden; top: 0; left: 0;">
+<video style="width: 100%; height: 100%; position: relative; top: 0; left: 0;" src="{{itemValue('Hiska_camera1_hls')}}" controls autoplay/>
+</span>
+
+```
+
+
+
+**FFmpeg HLS Special settings**
 
 To get audio working you need to have the camera include audio in the stream and in a format that is supported by Chromecast or your browser, I suggest AAC. Then you need to change the from the first line to the second one.
+
+
+Lower delay behind realtime if your iFrames are 1 second apart:
+```bash
+-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -segment_list_flags live -flags -global_header -hls_flags delete_segments -hls_time 1 -hls_list_size 3
+```
 
 
 For cameras with no audio in the stream (default setting)
@@ -945,17 +938,9 @@ For cameras with audio in the stream. Note will break Chromecast if the camera d
 Some browsers require larger segment sizes to prevent choppy playback, this can be done with this setting to create 10 second segment files which increases the time before you can get playback working.
 
 ```bash
--f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_time 10 -hls_flags delete_segments
+-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_time 10 -hls_flags delete_segments
 
 ```
-
-
-For use when a small ramdrive is used as it does not keep creating new files, but re-uses the old file names.
-
-```bash
--strict -2 -acodec copy -vcodec copy -hls_wrap wrap
-```
-
 
 
 **Animated GIF feature**
