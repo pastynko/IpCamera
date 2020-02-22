@@ -588,6 +588,47 @@ Text label="Outside Camera Group" icon="camera"{Image url="http://192.168.0.2:54
 
 ```
 
+In order to display camera hls streams side by side you can also create a webView item and link it to a HTML file in the conf/html directory as follows:
+The webView url is that of your openhab installation.
+Please note that the iOS app will currently open the streams in new full screen players, however a fix has been merged for the next app update.
+
+```
+Webview url="http://192.168.6.4:8080/static/html/file.html" height=5
+
+```
+
+```
+<!DOCTYPE html>
+<html>
+	<body>
+		<div style="width: 50%; float: left;">
+			<video playsinline autoplay muted controls style="width:100%; " src="http://192.168.6.4:50001/ipcamera.m3u8" />
+		</div>
+		<div style="width: 50%; float: left;">
+			<video playsinline autoplay muted controls style="width: 100%; " src="http://192.168.6.4:50002/ipcamera.m3u8" />
+		</div>
+		<div style="width: 50%; float: left;">
+			<video playsinline autoplay muted controls style="width:100%; " src="http://192.168.6.4:50003/ipcamera.m3u8" />
+		</div>
+		<div style="width: 50%; float: left;">
+			<video playsinline autoplay muted controls style="width: 100%; " src="http://192.168.6.4:50004/ipcamera.m3u8" />
+		</div>
+	</body>
+</html> 
+
+```
+
+*.habpanel
+
+Habpanel can be used with hls streams by adding a template widget with the following code linking to your hls stream url:
+
+```
+<span style="position:absolute; height:100%; width:100%; overflow: hidden; top: 0; left: 0;">
+<video style="width: 100%; height: 100%; position: relative; top: 0; left: 0;" src="{{itemValue('Hiska_camera1_hls')}}" controls autoplay/>
+</span>
+
+```
+
 *.rules
 
 ```java
