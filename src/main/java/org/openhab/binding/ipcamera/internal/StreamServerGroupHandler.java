@@ -97,7 +97,7 @@ public class StreamServerGroupHandler extends ChannelInboundHandlerAdapter {
                         case "/ipcamera.m3u8":
                             if (ipCameraGroupHandler.hlsTurnedOn) {
                                 String debugMe = ipCameraGroupHandler.getPlayList();
-                                logger.info("playlist is:{}", debugMe);
+                                logger.debug("playlist is:{}", debugMe);
                                 sendString(ctx, debugMe, "application/x-mpegurl");
                             } else {
                                 logger.warn("HLS requires the groups startStream channel to be turned on first.");

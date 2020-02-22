@@ -141,20 +141,24 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         String m3u8File = readCamerasPlaylist(cameraIndex);
         BigDecimal segmentLength = new BigDecimal(
                 m3u8File.substring(m3u8File.lastIndexOf("#EXTINF:") + 8, m3u8File.lastIndexOf(",")));
-        logger.debug("assmebling with segments that are {} seconds long", segmentLength);
-        numberOfFiles = pollTimeInSeconds.divide(segmentLength, 6, RoundingMode.HALF_UP);
+        logger.debug("Segments are {} seconds long", segmentLength);
+        numberOfFiles = pollTimeInSeconds.divide(segmentLength, 6, RoundingMode.UP);
         logger.debug("Keeping the last {} files from the cameras playlist.", numberOfFiles.intValue());
         if (numberOfFiles.intValue() < 1) {
             numberOfFiles = new BigDecimal(1);
         }
+        logger.debug("Passing files to keep now");
         m3u8File = keepLast(m3u8File, numberOfFiles.intValue());
+        logger.debug("replacing files to keep now");
         m3u8File = m3u8File.replace("ipcamera", cameraIndex + "ipcamera"); // add index so we can then fetch output path
-        if (segmentLength.intValue() * entries > pollTimeInSeconds.intValue()) {
+        logger.debug("calculating segments to keep now");
+        if ((segmentLength.intValue() * entries) > pollTimeInSeconds.intValue() * 3) {
             playingNow = removeFromStart(playingNow, numberOfFiles.intValue());
         }
+        // logger.debug("Done, updating playlist.");
         playingNow = playingNow + "#EXT-X-DISCONTINUITY\n" + m3u8File;
-        playList = "#EXTM3U\n" + "#EXT-X-VERSION:3\n" + "#EXT-X-ALLOW-CACHE:NO\n" + "#EXT-X-TARGETDURATION:4\n"
-                + "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n" + playingNow;
+        playList = "#EXTM3U\n" + "#EXT-X-VERSION:3\n" + // "#EXT-X-ALLOW-CACHE:NO\n" +
+                "#EXT-X-TARGETDURATION:5\n" + "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n" + playingNow;
     }
 
     private IpCameraGroupHandler getHandle() {
@@ -317,7 +321,6 @@ public class IpCameraGroupHandler extends BaseThingHandler {
                 cameraIndex = checkForMotion(cameraIndex);
             }
             if (hlsTurnedOn) {
-                logger.debug("Creating playlist");
                 setPlayList();
             }
         }

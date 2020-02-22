@@ -145,10 +145,12 @@ public class Ffmpeg {
             running = true;
             if (format.equals("HLS")) {
                 ipCameraHandler.setChannelState(CHANNEL_START_STREAM, OnOffType.valueOf("ON"));
-            }
-            try {
-                Thread.sleep(4500);
-            } catch (InterruptedException e) {
+                if (keepAlive > -1) {
+                    try {
+                        Thread.sleep(4500); // Used for on demand HLS to give ffmpeg time to produce the files needed.
+                    } catch (InterruptedException e) {
+                    }
+                }
             }
         }
     }

@@ -1044,7 +1044,9 @@ public class IpCameraHandler extends BaseThingHandler {
             mjpegChannelGroup.remove(ctx.channel());
             if (mjpegChannelGroup.isEmpty()) {
                 logger.debug("All MJPEG streams have stopped, so closing the MJPEG source stream now.");
-                if (!mjpegUri.equals("")) {
+                if (mjpegUri.equals("ffmpeg")) {
+                    ffmpegMjpeg.stopConverting();
+                } else if (!mjpegUri.equals("")) {
                     closeChannel(getTinyUrl(mjpegUri));
                 } else {
                     ffmpegMjpeg.stopConverting();
