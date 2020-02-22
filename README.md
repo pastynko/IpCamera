@@ -5,7 +5,7 @@ Please take the time to read through this guide as it will show many hidden feat
 I recommend purchasing a brand of camera that has an open API, as many of the features use far less CPU when done with an API camera, and they usually have more features. 
 You will also have a more enjoyable time with these cameras as they are more tested and easier to setup.
  
-To see what each brand has implemented from the API, please see this post:
+How to install the binding and what each brand has implemented from their API's, please see this post:
 
 <https://community.openhab.org/t/ipcamera-new-ip-camera-binding/42771>
 
@@ -915,13 +915,13 @@ Habpanel can be used with HLS by adding a template widget with the following cod
 To get audio working you need to have the camera include audio in the stream and in a format that is supported by Chromecast or your browser, I suggest AAC. Then you need to change the from the first line to the second one.
 
 
-Lower delay behind realtime if your iFrames are 1 second apart:
+Less delay behind realtime (no audio) if your cameras iFrames are 1 second apart:
 ```bash
--strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -segment_list_flags live -flags -global_header -hls_flags delete_segments -hls_time 1 -hls_list_size 3
+-strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -segment_list_flags live -flags -global_header -hls_flags delete_segments -hls_time 1 -hls_list_size 4
 ```
 
 
-For cameras with no audio in the stream (default setting)
+For cameras with no audio in the stream (default setting) and it must be a supported format like AAC.
 
 ```bash
 -strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -hls_flags delete_segments -segment_list_flags live -flags -global_header
