@@ -134,28 +134,34 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         }
         mediaSequence = mediaSequence + numberToRemove;
         entries = entries - numberToRemove;
-        return playingNow.substring(start);
+        return string.substring(start);
+    }
+
+    int howManySegments(String m3u8File) {
+        int start = m3u8File.length();
+        int files = 0;
+        for (BigDecimal totalTime = new BigDecimal(0); totalTime.intValue() < pollTimeInSeconds.intValue(); files++) {
+            start = m3u8File.lastIndexOf("#EXTINF:", start - 1);
+            if (start != -1) {
+                totalTime = totalTime.add(new BigDecimal(m3u8File.substring(start + 8, m3u8File.indexOf(",", start))));
+            } else {
+                break;
+            }
+        }
+        return files;
     }
 
     public void setPlayList() {
         String m3u8File = readCamerasPlaylist(cameraIndex);
-        BigDecimal segmentLength = new BigDecimal(
-                m3u8File.substring(m3u8File.lastIndexOf("#EXTINF:") + 8, m3u8File.lastIndexOf(",")));
-        logger.debug("Segments are {} seconds long", segmentLength);
-        numberOfFiles = pollTimeInSeconds.divide(segmentLength, 6, RoundingMode.UP);
-        logger.debug("Keeping the last {} files from the cameras playlist.", numberOfFiles.intValue());
-        if (numberOfFiles.intValue() < 1) {
-            numberOfFiles = new BigDecimal(1);
-        }
-        logger.debug("Passing files to keep now");
-        m3u8File = keepLast(m3u8File, numberOfFiles.intValue());
+        int numberOfSegments = howManySegments(m3u8File);
+        logger.debug("Using {} segmented files to make up a poll period.", numberOfSegments);
+        m3u8File = keepLast(m3u8File, numberOfSegments);
         logger.debug("replacing files to keep now");
         m3u8File = m3u8File.replace("ipcamera", cameraIndex + "ipcamera"); // add index so we can then fetch output path
-        logger.debug("calculating segments to keep now");
-        if ((segmentLength.intValue() * entries) > pollTimeInSeconds.intValue() * 3) {
-            playingNow = removeFromStart(playingNow, numberOfFiles.intValue());
+        logger.debug("There are {} segments, so we will remove {} from playlist.", entries, numberOfSegments);
+        if ((entries / numberOfSegments) > 2) {
+            playingNow = removeFromStart(playingNow, numberOfSegments);
         }
-        // logger.debug("Done, updating playlist.");
         playingNow = playingNow + "#EXT-X-DISCONTINUITY\n" + m3u8File;
         playList = "#EXTM3U\n" + "#EXT-X-VERSION:3\n" + // "#EXT-X-ALLOW-CACHE:NO\n" +
                 "#EXT-X-TARGETDURATION:5\n" + "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n" + playingNow;
