@@ -1002,6 +1002,8 @@ public class IpCameraHandler extends BaseThingHandler {
             if (auto) {
                 autoSnapshotMjpegChannelGroup.add(ctx.channel());
                 sendMjpegFrame(currentSnapshot, autoSnapshotMjpegChannelGroup);
+                // iOS uses a FIFO? and needs two frames to display a pic
+                sendMjpegFrame(currentSnapshot, autoSnapshotMjpegChannelGroup);
                 streamingAutoFps = true;
             } else {
                 snapshotMjpegChannelGroup.add(ctx.channel());

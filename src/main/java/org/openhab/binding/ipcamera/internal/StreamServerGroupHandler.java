@@ -13,12 +13,15 @@
 
 package org.openhab.binding.ipcamera.internal;
 
+import static org.openhab.binding.ipcamera.IpCameraBindingConstants.CHANNEL_START_STREAM;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.openhab.binding.ipcamera.handler.IpCameraGroupHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +103,11 @@ public class StreamServerGroupHandler extends ChannelInboundHandlerAdapter {
                                 logger.debug("playlist is:{}", debugMe);
                                 sendString(ctx, debugMe, "application/x-mpegurl");
                             } else {
-                                logger.warn("HLS requires the groups startStream channel to be turned on first.");
+                                logger.warn(
+                                        "HLS requires the groups startStream channel to be turned on first. Just starting it now.");
+                                ipCameraGroupHandler.handleCommand(
+                                        ipCameraGroupHandler.getThing().getChannel(CHANNEL_START_STREAM).getUID(),
+                                        OnOffType.valueOf("ON"));
                             }
                             break;
                         case "/ipcamera.jpg":

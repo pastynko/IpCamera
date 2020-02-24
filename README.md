@@ -161,6 +161,7 @@ Another example is:
 + For mjpeg to work you need to set the first substream to be in mjpeg format for the default settings to work, otherwise you can override the default with STREAM_URL_OVERRIDE with a valid url for mjpeg streams.
 + These cameras have the ability to call the openHAB REST API directly when an alarm occurs, or you can use the built in Alarm Server that the binding auto sets up for you. 
 Be sure to update to the latest firmware for your camera as Instar have made a lot of improvements in this area recently and MQTT is also just added.
++ Newer firmwares allow the Alarm Server notifications to be changed from every 60 seconds to down to 5 seconds or even lower.
 + For Onvif it may be required to disable the authentication (only for ONVIF) in the cameras setup page if you experience issues using PTZ features. 
 
 
@@ -654,8 +655,8 @@ For the above notifications to work you will need to setup multiple users with t
 ## Moving PTZ capable cameras
 
 Currently there are two ways to move the camera, 1 is with Onvif Absolute move, and the second is with Onvif presets. 
-The full example above shows how to use the Absolute move method which when a control is moved, it will wait until the next poll time has arrived and make all the movements at the same time. 
-Not all cameras support Absolute movements, so the below Onvif Preset method is easier to use, does not need a rule to set 3 different values from a single button, and does not wait for the Poll time to arrive.
+The full example above shows how to use the Absolute move method. When a control is moved, it will wait until the next poll time to arrive and make all the movements at the same time. 
+Not all cameras support Absolute movements, so the below Onvif Preset method is easier to use, does not need a rule to set 3 different values from a single button, and does not wait for the poll time to arrive.
 
 item:
 
@@ -680,7 +681,8 @@ TestCamGotoPreset.sendCommand(1)
 ```
 
 The presets do not wait until the next poll time to arrive and are made right away, so this makes the method more desirable if you set a high POLL_CAMERA_MS time.
-To create the preset locations, use a program like the free 'onvif device manager' program to create the presets and then you can create names using the mappings feature of the selection element. See docs here <https://www.openhab.org/docs/configuration/sitemaps.html#mappings>
+To create the preset locations, use a program like the free 'onvif device manager' program to create the presets and then you can create names using the mappings feature of the selection element. 
+See docs here <https://www.openhab.org/docs/configuration/sitemaps.html#mappings>
 
 
 ## Image / Snapshots
@@ -690,11 +692,12 @@ There are advantages to using these methods from the binding instead of directly
 
 **Ways to use snapshots are:**
 
-+ Use the cameras URL and fetch it directly so it passes from the camera to your end device ie Tablet without passing any data through the openHAB server. 
-For cameras like Dahua that refuse to allow DIGEST to be turned off this is not an option, plus the binding has some advantages which are explained below so even if your camera can work directly, you may not wish to do so.
++ Use the cameras URL and fetch it directly so it passes from the camera to your end device ie a tablet without passing any data through the openHAB server. 
+For cameras like Dahua that refuse to allow DIGEST to be turned off, this is not an option. 
+The binding has some advantages which are explained below so even if your camera can work directly, you may not wish to do so.
 + Request a snapshot with the url ``http://192.168.xxx.xxx:54321/ipcamera.jpg`` (with 54321 being the SERVER_PORT number that you specify in the bindings setup) this will return the current snapshot without needing to wait for the camera to create and send a snapshot.
 This file does not exist on disk and is served out of ram to keep disk writes to a minimum with this binding. 
-It also means the binding can serve a jpg file much faster than a camera can directly as a camera usually waits for a keyframe, then has to compresses the data, before it can then be sent. 
+This means the binding can serve a jpg file much faster than a camera can directly as a camera usually waits for a keyframe, then has to compresses the data, before it can then be sent. 
 All of this takes time giving you a delay compared to serving the file from Ram and can make a sitemap or habpanel UI feel slow to respond if the pictures take time to appear.
 The ipcamera.jpg can be cast as most cameras can not cast their snapshots without using the binding.
 + Use the ``http://192.168.xxx.xxx:54321/snapshots.mjpeg`` to request a stream of snapshots to be delivered in mjpeg format. 
@@ -707,11 +710,11 @@ Handy for cameras which lag due to slow processors and buffering.
 These snapshots can be fetched either directly as they exist on disk, or via this url format. 
 ``http://192.168.xxx.xxx:54321/snapshot0.jpg`` Where the IP is your Openhab server and the port is what is setup in the binding as the SERVER_PORT.
 + The Image channel can be used but is not recommended unless the poll time is above 8 seconds.
-The snapshots.mjpeg is a better way or if using 1 second updates the newer autofps.mjpeg
+The snapshots.mjpeg is a better way or if using 1 second updates the newer autofps.mjpeg which are discussed in the streaming section of this readme.
 + You can also read the raw image data directly from the image channel and use it in rules, there are some examples on the forum how to do this, however it is far easier to use the above methods.
-+ Also worth a mention is that you can off load cameras to a software and hardware server. 
++ Also worth a mention is that you can off load cameras to a software package running on a separate hardware server. 
 These have their advantages, but can be overkill depending on what you plan to do with your cameras. 
-Motion and Zoneminder opensource projects are two examples.
+Motion, Shinobi and Zoneminder are opensource projects worth checking out.
 
 
 See this forum thread for examples of how to use snapshots and streams.
@@ -726,19 +729,19 @@ If you prefer to use your own firewall instead, you can also choose to make the 
 
 There are now multiple ways to get a moving picture:
 
-+ HLS (Http Live Streaming) which can use high res h264. 
++ HLS (Http Live Streaming) which uses high resolution h264. 
 This can be used to cast to Chromecast devices and works well in iOS/Apple devices.
-Other platforms it may be necessary to install a plugin or updates to the browser before the stream can be seen.
-+ ipcamera.mjpeg whilst larger in size, it is more compatible at displaying in UI's. 
-Ffmpeg can be used to create this stream if your camera does not create one for you, but this uses a lot of CPU. 
-As most cameras limit the resolution in this format, consider using HLS or either autofps.mjpeg or snapshots.mjpeg which will be in higher resolution.
-+ snapshots.mjpeg which is a special mjpeg stream created from the cameras snapshots that are at the Polling rate.
-If the polling time is too long this will not work so I suggest using with 1000ms to 9000ms polling times.
+Other platforms it may be necessary to install a plugin or update the browser before the stream can be seen.
++ ipcamera.mjpeg whilst larger in size, it is more compatible at displaying in UI's and has less lag behind realtime.
+Ffmpeg can be used to create this stream if your camera does not create one for you, but this uses more CPU. 
+As most cameras limit the resolution in this format, consider using HLS or either autofps.mjpeg or snapshots.mjpeg instead which will be in higher resolution.
++ snapshots.mjpeg is a special mjpeg stream created from the cameras snapshots that are at the Polling rate.
+If the polling time is too long, this will not work so I suggest using it with 1000ms to 9000ms polling times.
 + autofps.mjpeg This requires the poll time to be 1000ms and the motion alarm to be turned on or it will not work as intended.
 This feature is designed to keep data traffic to your mobile devices as low as possible by automatically sending 1fps when motion is occuring, but only 1 picture every 8 seconds when the picture has no motion.
-Why send lots of pictures if the picture has not changed as doing so only eats up your data plan.
+The idea is to not send lots of pictures if the picture has not changed as doing so only eats up your data plan.
 + Animated GIF.
-This is small in size and very compatible and handy to use in push notifications, pushover, telegram, or emails.
+This is small in size and very compatible and handy to use in push notifications, Pushover, Telegram, or emails.
 
 See this forum thread for examples of how to use snapshots and streams.
 <https://community.openhab.org/t/ip-camera-how-to-clickable-thumbnail-overview-in-sitemaps-that-opens-up-to-a-larger-view/77990>
@@ -983,9 +986,15 @@ end
 ## Group Displays
 
 The full example section has an example of how to setup a group display.
-Currently the poll time of the group must be the same time as the segment size if using HLS and all cameras must have the same segment size for this to work.
-The poll time is how long to display each camera for, before moving onto the next camera.
-This is still a very new feature and if you have any issues please send me some TRACE level log output of when the problem occurs.
+Some additional things to check to get it working are:
++ Currently the poll time of the group must be the same or less than the total time contained in each cameras m3u8 files.
+If you have 3 seconds worth of video segments then this is the max time you can set to the Poll time to.
+If your not using HLS and just using ipcamera.jpg to display the groups picture with then the poll time can be set to a wider range.
++ All cameras should have the same HLS segment size setting.
+1 and 2 second long segments have been tested to work.
+
+
+This is still a very new feature and if you have any issues please send some TRACE level log output of when the problem occurs.
 
 ## Batch motion detection rules
 
@@ -1153,7 +1162,7 @@ log:set WARN smarthome.event
 
 ```
 
-To re-enable use the same command with INFO instead of WARN.
+To re-enable just use the same command with INFO instead of WARN.
 
 
 To filter out the events do the following:
@@ -1180,14 +1189,13 @@ You can specify the item name in the filter to remove just 1 camera, or you can 
 
 ## Roadmap for further development
 
-Currently the focus is on stability and creating a good framework that allows multiple brands to be used in RULES in a consistent way. 
-Hopefully the binding is now less work to add a new function to instead of creating stand alone scripts which are not easy for new openHAB users to find, setup or use.
-Sharing rules with others becomes easier if all brands are handled the same way and with channels that have the same name.
+Currently the focus is on creating a stable framework that allows multiple brands to be used in a consistent way. 
+Sharing rules with others will become easier if all brands are handled the same way and with channels that have the same name.
 
-If you need a feature added that is in an API and you can not program, please raise an issue ticket here at this Github project with a sample of what a browser shows when you enter in the URL and it is usually very quick to add these features.
+If you need a feature added that is in an API and you can not program, please raise an issue ticket at Github with a sample of what a browser shows when you enter in the URL, it is usually very quick to add features.
 
 If you wish to contribute then please create an issue ticket first to discuss how things will work before doing any coding. 
-This is for multiple reasons due to needing to keep things CONSISTENT between brands, lower the risk of breaking changes, and also easy to maintain. 
+This is for multiple reasons due to needing to keep things CONSISTENT between brands, lower the risk of breaking changes, and also keep the binding easy to maintain. 
 
 The following list is a great place to start helping with this binding if you wish to contribute. 
 Any feedback, push requests and ideas are welcome, just please create a Github issue with your plans first.
@@ -1202,6 +1210,6 @@ Areas the binding could be improved are:
 + 1 and 2 way audio. Keen to add this at some point for talking with people at my front door and baby monitor uses.
 
 
-Example Onvif SOAP contents can be found here for most requests and responses. 
+Example Onvif SOAP contents can be found here for most requests and responses.
 I have found these useful as often example SOAP traces are not in the Onvif documentation.
 <https://git.linuxmce.org/garagevibes/linuxmce/tree/08c52739954c0bfce7443eddc1ad4f6936a70fbe/src/Advanced_IP_Camera/onvif>

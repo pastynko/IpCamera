@@ -128,13 +128,13 @@ public class IpCameraGroupHandler extends BaseThingHandler {
     }
 
     String removeFromStart(String string, int numberToRemove) {
-        int start = 0;
+        int startingFrom = string.indexOf("#EXTINF:");
         for (int loop = numberToRemove; loop > 0; loop--) {
-            start = string.indexOf("#EXTINF:", start + 1);
+            startingFrom = string.indexOf("#EXTINF:", startingFrom + 27);
         }
         mediaSequence = mediaSequence + numberToRemove;
         entries = entries - numberToRemove;
-        return string.substring(start);
+        return string.substring(startingFrom);
     }
 
     int howManySegments(String m3u8File) {
@@ -151,7 +151,7 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         return files;
     }
 
-    public void setPlayList() {
+    public void createPlayList() {
         String m3u8File = readCamerasPlaylist(cameraIndex);
         int numberOfSegments = howManySegments(m3u8File);
         logger.debug("Using {} segmented files to make up a poll period.", numberOfSegments);
@@ -159,8 +159,8 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         logger.debug("replacing files to keep now");
         m3u8File = m3u8File.replace("ipcamera", cameraIndex + "ipcamera"); // add index so we can then fetch output path
         logger.debug("There are {} segments, so we will remove {} from playlist.", entries, numberOfSegments);
-        if ((entries / numberOfSegments) > 2) {
-            playingNow = removeFromStart(playingNow, numberOfSegments);
+        if (entries > numberOfSegments * 3) {
+            playingNow = removeFromStart(playingNow, entries - (numberOfSegments * 3));
         }
         playingNow = playingNow + "#EXT-X-DISCONTINUITY\n" + m3u8File;
         playList = "#EXTM3U\n" + "#EXT-X-VERSION:3\n" + // "#EXT-X-ALLOW-CACHE:NO\n" +
@@ -327,7 +327,7 @@ public class IpCameraGroupHandler extends BaseThingHandler {
                 cameraIndex = checkForMotion(cameraIndex);
             }
             if (hlsTurnedOn) {
-                setPlayList();
+                createPlayList();
             }
         }
     };
@@ -377,7 +377,7 @@ public class IpCameraGroupHandler extends BaseThingHandler {
 
     @Override
     public void dispose() {
-        logger.info("dispose() called for a group thing.");
+        logger.debug("dispose() called for a group thing.");
         startStreamServer(false);
         IpCameraHandler.listOfGroupHandlers.remove(this);
         if (pollCameraGroupJob != null) {
