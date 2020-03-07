@@ -66,9 +66,6 @@ Please read the special notes for Dahua as they will apply.
 
 + For mjpeg to work you need to set the first substream to be in mjpeg format for the default settings to work, otherwise you can override the default with STREAM_URL_OVERRIDE with a valid url for mjpeg streams.
 
-+ The camera I have requires the snapshot set to 1 second updates and also the schedule set to record it before the snapshot will respond at 1 second rates. 
-I found that changing the settings to send the snapshot to a NAS without it having any NAS settings allowed the snapshot to be generated every second. 
-The cameras default settings worked, but it improved when the motion schedule was removed for snapshots.
 
 **Hikvision**
 
@@ -76,8 +73,7 @@ The cameras default settings worked, but it improved when the motion schedule wa
 
 + Each alarm you wish to use must have "Notify Surveillance Center" enabled under each alarms settings in the control panel of the camera itself. 
 
-+ The CGI/API and also ONVIF are disabled by default on these cameras, so enable and create user details for ONVIF that are the same user/pass as what you have given the binding. 
-If your camera does not have PTZ then you can leave ONVIF disabled and just enable the CGI/API.
++ The CGI/API and also ONVIF are disabled by default on these cameras, so enable and create user details for ONVIF that are the same user/pass as what you have given the binding. If your camera does not have PTZ then you can leave ONVIF disabled and just enable the CGI/API.
 
 If you need a channel or control updated in case you have made a change with the cameras app, you can call a refresh on it by using a cron rule.
 
@@ -125,18 +121,11 @@ Thing ipcamera:HIKVISION:West "West Camera"
 
 + If the user/pass is wrong the camera can lockout and refuse to answer the binding requiring a reset of the camera, so be sure the details are correct.
 
-+ To use MJPEG streaming you need to enable one of the streams to use this format. 
-This can be done by entering this into any browser:
-
-```
-http://ip:88/cgi-bin/CGIProxy.fcgi?cmd=setSubStreamFormat&format=1&usr=admin&pwd=password
-```
++ To use MJPEG streaming you need to enable one of the streams to use this format. This can be done by entering this into any browser:``http://ip:88/cgi-bin/CGIProxy.fcgi?cmd=setSubStreamFormat&format=1&usr=admin&pwd=password``
 
 + If your camera does not support mjpeg as some Foscams no longer do, then you can set ``STREAM_URL_OVERRIDE="ffmpeg"`` to use your CPU to generate a mjpeg stream.
 
-+ Some FOSCAM cameras need to have a detection area listed in the URL when you enable the motion alarm. 
-As each model has a different resolution and two different URLs, this makes it difficult to make this automatic so an override feature was added to create your own enable the alarm url. 
-This setting is called ``MOTION_URL_OVERRIDE`` and the steps to using it are:
++ Some FOSCAM cameras need to have a detection area listed in the URL when you enable the motion alarm. As each model has a different resolution and two different URLs, this makes it difficult to make this automatic so an override feature was added to create your own enable the alarm url. This setting is called ``MOTION_URL_OVERRIDE`` and the steps to using it are:
 
 
 1. Enable the motion alarm in the web interface of your camera and setup any areas you wish movement to be ignored in ie. Tree branches moving in the wind.
@@ -712,9 +701,7 @@ These snapshots can be fetched either directly as they exist on disk, or via thi
 + The Image channel can be used but is not recommended unless the poll time is above 8 seconds.
 The snapshots.mjpeg is a better way or if using 1 second updates the newer autofps.mjpeg which are discussed in the streaming section of this readme.
 + You can also read the raw image data directly from the image channel and use it in rules, there are some examples on the forum how to do this, however it is far easier to use the above methods.
-+ Also worth a mention is that you can off load cameras to a software package running on a separate hardware server. 
-These have their advantages, but can be overkill depending on what you plan to do with your cameras. 
-Motion, Shinobi and Zoneminder are opensource projects worth checking out.
++ Also worth a mention is that you can off load cameras to a software package running on a separate hardware server. These have their advantages, but can be overkill depending on what you plan to do with your cameras. Motion, Shinobi and Zoneminder are opensource projects worth checking out.
 
 
 See this forum thread for examples of how to use snapshots and streams.
@@ -740,8 +727,7 @@ If the polling time is too long, this will not work so I suggest using it with 1
 + autofps.mjpeg This requires the poll time to be 1000ms and the motion alarm to be turned on or it will not work as intended.
 This feature is designed to keep data traffic to your mobile devices as low as possible by automatically sending 1fps when motion is occuring, but only 1 picture every 8 seconds when the picture has no motion.
 The idea is to not send lots of pictures if the picture has not changed as doing so only eats up your data plan.
-+ Animated GIF.
-This is small in size and very compatible and handy to use in push notifications, Pushover, Telegram, or emails.
++ Animated GIF. This is small in size and very compatible and handy to use in push notifications, Pushover, Telegram, or emails.
 
 See this forum thread for examples of how to use snapshots and streams.
 <https://community.openhab.org/t/ip-camera-how-to-clickable-thumbnail-overview-in-sitemaps-that-opens-up-to-a-larger-view/77990>
@@ -833,8 +819,8 @@ For non Onvif cameras you just need to check the url in the last step works and 
 6. Consider using a SSD, HDD or a tmpfs (ram drive) if using SD/flash cards as the HLS streams are written to the FFMPEG_OUTPUT folder. 
 Only a small amount of storage is needed.
 I use micro SD cards and a ramdrive and have excellent performance.
-7. If streaming to a Chromecast that is not 4k capable, you need to ensure the stream is in a resolution that your Chromecast is capable of, ie 1080p or 720p. 
-Cameras with 3 streams are handy as you can have a 4k stream going to a NVR whilst a 720p stream can be cast to your TV whilst a 3rd can be for mjpeg format.
+7. If streaming to a Chromecast that is not 4k capable, you need to ensure the stream is in a resolution that your Chromecast is capable of, ie 1080p or 720p. Cameras with 3 streams are handy as you can have a 4k stream going to a NVR whilst a 720p stream can be cast to your TV whilst a 3rd can be for mjpeg format.
+
 
 **Ram drive setup**
 
@@ -919,6 +905,7 @@ To get audio working you need to have the camera include audio in the stream and
 
 
 Less delay behind realtime (no audio) if your cameras iFrames are 1 second apart:
+
 ```bash
 -strict -2 -f lavfi -i aevalsrc=0 -acodec aac -vcodec copy -segment_list_flags live -flags -global_header -hls_flags delete_segments -hls_time 1 -hls_list_size 4
 ```
@@ -987,11 +974,11 @@ end
 
 The full example section has an example of how to setup a group display.
 Some additional things to check to get it working are:
+
 + Currently the poll time of the group must be the same or less than the total time contained in each cameras m3u8 files.
-If you have 3 seconds worth of video segments then this is the max time you can set to the Poll time to.
-If your not using HLS and just using ipcamera.jpg to display the groups picture with then the poll time can be set to a wider range.
-+ All cameras should have the same HLS segment size setting.
-1 and 2 second long segments have been tested to work.
+If you have 3 seconds worth of video segments, this is the max time you can set to the Poll time to.
+If your not using HLS and are just using ipcamera.jpg to display the groups picture with, then the poll time can be set to a wider range.
++ All cameras should have the same HLS segment size setting. 1 and 2 second long segments have been tested to work.
 
 
 This is still a very new feature and if you have any issues please send some TRACE level log output of when the problem occurs.

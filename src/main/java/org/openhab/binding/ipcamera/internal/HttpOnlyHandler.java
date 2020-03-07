@@ -16,6 +16,7 @@ import static org.openhab.binding.ipcamera.IpCameraBindingConstants.*;
 
 import java.util.ArrayList;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.types.Command;
@@ -30,6 +31,8 @@ import io.netty.util.ReferenceCountUtil;
  *
  * @author Matthew Skinner - Initial contribution
  */
+
+@NonNullByDefault
 public class HttpOnlyHandler extends ChannelDuplexHandler {
     IpCameraHandler ipCameraHandler;
 

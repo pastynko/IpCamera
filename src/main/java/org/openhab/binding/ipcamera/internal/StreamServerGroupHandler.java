@@ -20,8 +20,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.OnOffType;
+import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.openhab.binding.ipcamera.handler.IpCameraGroupHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +33,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultHttpResponse;
-import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpRequest;
@@ -51,12 +52,11 @@ import io.netty.util.ReferenceCountUtil;
  * @author Matthew Skinner - Initial contribution
  */
 
+@NonNullByDefault
 public class StreamServerGroupHandler extends ChannelInboundHandlerAdapter {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private IpCameraGroupHandler ipCameraGroupHandler;
-    private boolean handlingMjpeg = false; // used to remove ctx from group when handler is removed.
-    private boolean handlingSnapshotStream = false; // used to remove ctx from group when handler is removed.
-    byte[] incomingJpeg = null;
+    byte @Nullable [] incomingJpeg = null;
     String whiteList = "";
     int recievedBytes = 0;
     int count = 0;
@@ -81,11 +81,10 @@ public class StreamServerGroupHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(@Nullable ChannelHandlerContext ctx, @Nullable Object msg) throws Exception {
-
-        @Nullable
-        HttpContent content = null;
+        if (msg == null || ctx == null) {
+            return;
+        }
         try {
-            // logger.info("{}", msg);
             if (msg instanceof HttpRequest) {
                 HttpRequest httpRequest = (HttpRequest) msg;
                 // logger.debug("{}", httpRequest);
@@ -105,8 +104,9 @@ public class StreamServerGroupHandler extends ChannelInboundHandlerAdapter {
                             } else {
                                 logger.warn(
                                         "HLS requires the groups startStream channel to be turned on first. Just starting it now.");
-                                ipCameraGroupHandler.handleCommand(
-                                        ipCameraGroupHandler.getThing().getChannel(CHANNEL_START_STREAM).getUID(),
+                                String channelPrefix = "ipcamera:" + ipCameraGroupHandler.getThing().getThingTypeUID()
+                                        + ":" + ipCameraGroupHandler.getThing().getUID().getId() + ":";
+                                ipCameraGroupHandler.handleCommand(new ChannelUID(channelPrefix + CHANNEL_START_STREAM),
                                         OnOffType.valueOf("ON"));
                             }
                             break;
@@ -182,16 +182,6 @@ public class StreamServerGroupHandler extends ChannelInboundHandlerAdapter {
         ctx.channel().writeAndFlush(footerBbuf);
     }
 
-    /*
-     * private void sendError(ChannelHandlerContext ctx) throws IOException {
-     * HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.NOT_FOUND);
-     * response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-     * response.headers().add("Access-Control-Allow-Origin", "*");
-     * response.headers().add("Access-Control-Expose-Headers", "*");
-     * ctx.channel().writeAndFlush(response);
-     * }
-     */
-
     private void sendString(ChannelHandlerContext ctx, String contents, String contentType) throws IOException {
         ByteBuf contentsBbuf = Unpooled.copiedBuffer(contents, 0, contents.length(), StandardCharsets.UTF_8);
         HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
@@ -213,6 +203,9 @@ public class StreamServerGroupHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(@Nullable ChannelHandlerContext ctx, @Nullable Throwable cause) throws Exception {
+        if (cause == null || ctx == null) {
+            return;
+        }
         if (cause.toString().contains("Connection reset by peer")) {
             logger.debug("Connection reset by peer.");
         } else if (cause.toString().contains("An established connection was aborted by the software")) {
@@ -230,6 +223,9 @@ public class StreamServerGroupHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void userEventTriggered(@Nullable ChannelHandlerContext ctx, @Nullable Object evt) throws Exception {
+        if (evt == null || ctx == null) {
+            return;
+        }
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent e = (IdleStateEvent) evt;
             if (e.state() == IdleState.WRITER_IDLE) {

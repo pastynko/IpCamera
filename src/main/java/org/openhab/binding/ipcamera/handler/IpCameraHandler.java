@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2010-2019 Contributors to the openHAB project
+
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -127,6 +128,8 @@ import io.netty.util.concurrent.GlobalEventExecutor;
  * @author Matthew Skinner - Initial contribution
  */
 
+// @NonNullByDefault
+// @SuppressWarnings("null")
 public class IpCameraHandler extends BaseThingHandler {
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = new HashSet<ThingTypeUID>(
@@ -140,7 +143,7 @@ public class IpCameraHandler extends BaseThingHandler {
     private final ScheduledExecutorService cameraConnection = Executors.newSingleThreadScheduledExecutor();
     private final ScheduledExecutorService scheduledMovePTZ = Executors.newSingleThreadScheduledExecutor();
     private final ScheduledExecutorService pollCamera = Executors.newSingleThreadScheduledExecutor();
-    OnvifServicesListener onvifServicesListener;
+    // OnvifServicesListener onvifServicesListener = new OnvifServicesListener();
     public Configuration config;
 
     // ChannelGroup is thread safe
@@ -161,7 +164,7 @@ public class IpCameraHandler extends BaseThingHandler {
     private @Nullable Bootstrap mainBootstrap;
     private @Nullable ServerBootstrap serverBootstrap;
 
-    private OnvifDevice thisOnvifCamera;
+    private OnvifDevice thisOnvifCamera = new OnvifDevice("");
     private String mediaProfileToken = "empty";
     private String username = "";
     private String password = "";
@@ -169,7 +172,8 @@ public class IpCameraHandler extends BaseThingHandler {
 
     private EventLoopGroup mainEventLoopGroup = new NioEventLoopGroup();
     private EventLoopGroup serversLoopGroup = new NioEventLoopGroup();
-    private FullHttpRequest putRequestWithBody;
+    private FullHttpRequest putRequestWithBody = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("PUT"),
+            "");
     private String nvrChannel = "";
     private LinkedList<byte[]> fifoSnapshotBuffer = new LinkedList<byte[]>();
     private int preroll, postroll, snapCount = 0;
@@ -185,8 +189,7 @@ public class IpCameraHandler extends BaseThingHandler {
     // channel), 1=open, 2=open and ok to reuse
     public ArrayList<Byte> listOfChStatus = new ArrayList<Byte>(18);
     public ArrayList<String> listOfReplies = new ArrayList<String>(18);
-
-    public @Nullable ArrayList<String> lowPriorityRequests = null;
+    public ArrayList<String> lowPriorityRequests = new ArrayList<String>(0);
     public ReentrantLock lock = new ReentrantLock();
 
     // basicAuth MUST remain private as it holds the password
@@ -196,11 +199,11 @@ public class IpCameraHandler extends BaseThingHandler {
     public String mjpegUri = "";
     private @Nullable ChannelFuture serverFuture = null;
     public int serverPort = 0;
-    private @Nullable Object firstStreamedMsg = null;
+    private Object firstStreamedMsg = new Object();
     public byte[] currentSnapshot = new byte[] { (byte) 0x00 };
     private String rtspUri = "";
     public String ipAddress = "empty";
-    public String updateImageEvents;
+    public String updateImageEvents = "";
     public boolean audioAlarmUpdateSnapshot = false;
     boolean motionAlarmUpdateSnapshot = false;
     boolean isOnline = false; // Used so only 1 error is logged when a network issue occurs.
@@ -214,6 +217,7 @@ public class IpCameraHandler extends BaseThingHandler {
     PTZRequest ptzHandler = new PTZRequest("httponly");
     public Double motionThreshold = 0.0016;
     public int audioThreshold = 35;
+    @SuppressWarnings("unused")
     private @Nullable StreamServerHandler streamServerHandler;
     boolean streamingSnapshotMjpeg = false;
     public boolean motionAlarmEnabled = false;
@@ -222,6 +226,7 @@ public class IpCameraHandler extends BaseThingHandler {
 
     public IpCameraHandler(Thing thing) {
         super(thing);
+        config = thing.getConfiguration();
     }
 
     private IpCameraHandler getHandle() {
@@ -359,7 +364,7 @@ public class IpCameraHandler extends BaseThingHandler {
         }
         if (indexInLists >= 0) {
             lock.lock();
-            if (listOfReplies.get(indexInLists) != null) {
+            if (listOfReplies.get(indexInLists) != "") {
                 body = listOfReplies.get(indexInLists);
                 lock.unlock();
                 logger.debug("An OLD reply from the camera was:{}", body);
@@ -423,6 +428,7 @@ public class IpCameraHandler extends BaseThingHandler {
 
     // Always use this as sendHttpGET(GET/POST/PUT/DELETE, "/foo/bar",null,false)//
     // The authHandler will use the url inside a digest string as needed.
+    @SuppressWarnings("null")
     public boolean sendHttpRequest(String httpMethod, String httpRequestURLFull, @Nullable String digestString) {
 
         Channel ch;
@@ -523,13 +529,12 @@ public class IpCameraHandler extends BaseThingHandler {
             for (byte index = 0; index < listOfRequests.size(); index++) {
                 boolean done = false;
                 if (listOfRequests.get(index).equals(httpRequestURL)) {
-
                     switch (listOfChStatus.get(index)) {
                         case 2: // Open and ok to reuse
                             ch = listOfChannels.get(index);
                             if (ch.isOpen()) {
-                                // logger.debug(" Using the already open channel:{} \t{}:{}", index, httpMethod,
-                                // httpRequestURL);
+                                logger.debug("Using the already open channel:{} \t{}:{}", index, httpMethod,
+                                        httpRequestURL);
                                 commonHandler = (CommonCameraHandler) ch.pipeline().get("commonHandler");
                                 commonHandler.setURL(httpRequestURLFull);
                                 authHandler = (MyNettyAuthHandler) ch.pipeline().get("authHandler");
@@ -607,7 +612,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 listOfRequests.add(httpRequestURL);
                 listOfChannels.add(ch);
                 listOfChStatus.add((byte) 1);
-                listOfReplies.add(null);
+                listOfReplies.add("");
             } finally {
                 lock.unlock();
             }
@@ -650,14 +655,15 @@ public class IpCameraHandler extends BaseThingHandler {
 
     // These methods handle the response from all Camera brands, nothing specific to
     // any brand should be in here //
+
     private class CommonCameraHandler extends ChannelDuplexHandler {
         private int bytesToRecieve = 0;
         private int bytesAlreadyRecieved = 0;
-        private byte[] incomingJpeg;
+        private byte[] incomingJpeg = new byte[0];
         private String incomingMessage = "";
         private String contentType = "empty";
         @Nullable
-        private Object reply = null;
+        private Object reply = new Object();
         private String requestUrl = "";
         private boolean closeConnection = true;
         private boolean isChunked = false;
@@ -667,9 +673,11 @@ public class IpCameraHandler extends BaseThingHandler {
         }
 
         @Override
-        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-            @Nullable
-            HttpContent content = null;
+        public void channelRead(@Nullable ChannelHandlerContext ctx, @Nullable Object msg) throws Exception {
+            if (msg == null || ctx == null) {
+                return;
+            }
+            HttpContent content = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("GET"), "");
             try {
                 logger.trace("{}", msg.toString());
                 if (msg instanceof HttpResponse) {
@@ -683,19 +691,12 @@ public class IpCameraHandler extends BaseThingHandler {
                                         break;
                                     case "content-length":
                                         bytesToRecieve = Integer.parseInt(response.headers().getAsString(name));
+                                        // new untested
+                                        incomingJpeg = new byte[bytesToRecieve];
                                         break;
                                     case "connection":
                                         if (response.headers().getAsString(name).contains("keep-alive")) {
                                             closeConnection = false;
-                                            lock.lock();
-                                            try {
-                                                byte indexInLists = (byte) listOfChannels.indexOf(ctx.channel());
-                                                if (indexInLists >= 0) {
-                                                    listOfChStatus.set(indexInLists, (byte) 2);
-                                                }
-                                            } finally {
-                                                lock.unlock();
-                                            }
                                         }
                                         break;
                                     case "transfer-encoding":
@@ -704,12 +705,11 @@ public class IpCameraHandler extends BaseThingHandler {
                                         }
                                         break;
                                     case "strict-transport-security":
-                                        logger.debug("!! Header matched, this may be a Reolink camera. !!");
                                         if (response.headers().getAsString(name)
                                                 .contains("max-age=63072000; includeSubdomains; preload")) {
-                                            logger.debug("!! Closing channel and wont keep it open !!");
+                                            logger.debug(
+                                                    "!! Header matched, this may be a Reolink camera. Closing channel and wont keep it open !!");
                                             // Reolink cameras send more data than in the content length header.
-                                            // bytesToRecieve = 0;
                                             closeConnection = true;
                                         }
                                         break;
@@ -719,9 +719,8 @@ public class IpCameraHandler extends BaseThingHandler {
                                 closeConnection = false;
                                 if (mjpegUri.contains(requestUrl)) {
                                     if (msg instanceof HttpMessage) {
-                                        // logger.info("First stream packet back from camera is HttpMessage:{}", msg);
-                                        ReferenceCountUtil.retain(msg, 1);
                                         // very start of stream only
+                                        ReferenceCountUtil.retain(msg, 1);
                                         firstStreamedMsg = msg;
                                         streamToGroup(firstStreamedMsg, mjpegChannelGroup, true);
                                     }
@@ -743,35 +742,46 @@ public class IpCameraHandler extends BaseThingHandler {
                         }
                     }
                 }
-
                 if (msg instanceof HttpContent) {
                     if (mjpegUri.contains(requestUrl)) {
                         // multiple MJPEG stream packets come back as this.
-                        // logger.debug("Stream packets back from camera is :{}", msg);
                         ReferenceCountUtil.retain(msg, 1);
                         streamToGroup(msg, mjpegChannelGroup, true);
                     } else {
                         content = (HttpContent) msg;
-                        // Found a TP Link camera uses Content-Type: image/jpg instead of image/jpeg
+                        // Found some cameras uses Content-Type: image/jpg instead of image/jpeg
                         if (contentType.contains("image/jp")) {
                             if (bytesToRecieve == 0) {
                                 bytesToRecieve = 768000; // 0.768 Mbyte when no Content-Length is sent
                                 logger.debug("Camera has no Content-Length header, we have to guess how much RAM.");
                             }
                             for (int i = 0; i < content.content().capacity(); i++) {
-                                if (incomingJpeg == null) {
-                                    incomingJpeg = new byte[bytesToRecieve];
-                                }
                                 incomingJpeg[bytesAlreadyRecieved++] = content.content().getByte(i);
                             }
                             if (content instanceof LastHttpContent) {
                                 if (contentType.contains("image/jp") && bytesAlreadyRecieved != 0) {
                                     currentSnapshot = incomingJpeg;
                                     processSnapshot();
-                                    incomingJpeg = null;
+                                    // testing next line and if works need to do a full cleanup of this function.
+                                    closeConnection = true;
+                                    // incomingJpeg = null;
                                     if (closeConnection) {
                                         logger.debug("Snapshot recieved: Binding will now close the channel.");
+                                        bytesToRecieve = 0;
+                                        bytesAlreadyRecieved = 0;
                                         ctx.close();
+                                    } else {
+                                        lock.lock();
+                                        try {
+                                            byte indexInLists = (byte) listOfChannels.indexOf(ctx.channel());
+                                            if (indexInLists >= 0) {
+                                                listOfChStatus.set(indexInLists, (byte) 2);
+                                            }
+                                        } finally {
+                                            lock.unlock();
+                                            bytesToRecieve = 0;
+                                            bytesAlreadyRecieved = 0;
+                                        }
                                     }
                                 }
                             }
@@ -835,15 +845,18 @@ public class IpCameraHandler extends BaseThingHandler {
         }
 
         @Override
-        public void channelReadComplete(ChannelHandlerContext ctx) {
+        public void channelReadComplete(@Nullable ChannelHandlerContext ctx) {
         }
 
         @Override
-        public void handlerAdded(ChannelHandlerContext ctx) {
+        public void handlerAdded(@Nullable ChannelHandlerContext ctx) {
         }
 
         @Override
-        public void handlerRemoved(ChannelHandlerContext ctx) {
+        public void handlerRemoved(@Nullable ChannelHandlerContext ctx) {
+            if (ctx == null) {
+                return;
+            }
             lock.lock();
             try {
                 byte indexInLists = (byte) listOfChannels.indexOf(ctx.channel());
@@ -858,33 +871,29 @@ public class IpCameraHandler extends BaseThingHandler {
             } finally {
                 lock.unlock();
             }
-            incomingJpeg = null;
+            bytesToRecieve = 0;
             bytesAlreadyRecieved = 0;
-            contentType = null;
-            reply = null;
         }
 
         @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            /*
-             * lock.lock();
-             * try {
-             * byte indexInLists = (byte) listOfChannels.indexOf(ctx.channel());
-             * if (indexInLists >= 0) {
-             * listOfChStatus.set(indexInLists, (byte) -1);
-             * } else {
-             * logger.warn("!!!! exceptionCaught could not locate the channel to close it down");
-             * }
-             * } finally {
-             * lock.unlock();
-             * }
-             */
-            logger.warn("!!!! Camera possibly closed the channel on the binding, cause reported is: {}", cause);
+        public void exceptionCaught(@Nullable ChannelHandlerContext ctx, @Nullable Throwable cause) {
+            if (cause == null || ctx == null) {
+                return;
+            }
+            if (cause.toString().contains("java.lang.ArrayIndexOutOfBoundsException")) {
+                logger.warn("Camera sent {} bytes when the content-length header was {}.", bytesAlreadyRecieved,
+                        bytesToRecieve);
+            } else {
+                logger.warn("!!!! Camera possibly closed the channel on the binding, cause reported is: {}", cause);
+            }
             ctx.close();
         }
 
         @Override
-        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        public void userEventTriggered(@Nullable ChannelHandlerContext ctx, @Nullable Object evt) throws Exception {
+            if (ctx == null) {
+                return;
+            }
             if (evt instanceof IdleStateEvent) {
                 IdleStateEvent e = (IdleStateEvent) evt;
                 // If camera does not use the channel for X amount of time it will close.
@@ -952,6 +961,7 @@ public class IpCameraHandler extends BaseThingHandler {
         return ipAddress;
     }
 
+    @SuppressWarnings("null")
     public void startStreamServer(boolean start) {
 
         if (!start) {
@@ -1013,10 +1023,10 @@ public class IpCameraHandler extends BaseThingHandler {
         } else {
             snapshotMjpegChannelGroup.remove(ctx.channel());
             autoSnapshotMjpegChannelGroup.remove(ctx.channel());
-            if (snapshotMjpegChannelGroup.isEmpty()) {
+            if (streamingSnapshotMjpeg && snapshotMjpegChannelGroup.isEmpty()) {
                 streamingSnapshotMjpeg = false;
                 logger.debug("All Snapshot based MJPEG streams have stopped.");
-            } else if (autoSnapshotMjpegChannelGroup.isEmpty()) {
+            } else if (streamingAutoFps && autoSnapshotMjpegChannelGroup.isEmpty()) {
                 streamingAutoFps = false;
                 logger.debug("All AutoFps Snapshot based MJPEG streams have stopped.");
             }
@@ -1035,7 +1045,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 } else {
                     sendHttpGET(mjpegUri);
                 }
-            } else if (firstStreamedMsg != null) {
+            } else if (!firstStreamedMsg.toString().isEmpty()) {
                 ctx.channel().writeAndFlush(firstStreamedMsg);
                 mjpegChannelGroup.add(ctx.channel());
             } else if (ffmpegMjpeg != null) {
@@ -1047,11 +1057,15 @@ public class IpCameraHandler extends BaseThingHandler {
             if (mjpegChannelGroup.isEmpty()) {
                 logger.debug("All MJPEG streams have stopped, so closing the MJPEG source stream now.");
                 if (mjpegUri.equals("ffmpeg")) {
-                    ffmpegMjpeg.stopConverting();
+                    if (ffmpegMjpeg != null) {
+                        ffmpegMjpeg.stopConverting();
+                    }
                 } else if (!mjpegUri.equals("")) {
                     closeChannel(getTinyUrl(mjpegUri));
                 } else {
-                    ffmpegMjpeg.stopConverting();
+                    if (ffmpegMjpeg != null) {
+                        ffmpegMjpeg.stopConverting();
+                    }
                 }
             }
         }
@@ -1064,16 +1078,7 @@ public class IpCameraHandler extends BaseThingHandler {
         HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         response.headers().add(HttpHeaderNames.CONTENT_TYPE, contentType);
         response.headers().set(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_CACHE);
-        // response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
         response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
-        // response.headers().add("Content-Range", "bytes 0-3979/3980"); // try bytes 0-3979/*
-        // response.headers().add("Server", "Apache/2");
-
-        // response.headers().add("Keep-Alive", "timeout=2, max=100");
-        // response.headers().add("Accept-Ranges", "bytes");
-        // response.headers().add("X-Content-Duration", "0.0"); // try 0.0 for live streams
-        // response.headers().add("Content-Duration", "0.0");
-
         response.headers().add("Access-Control-Allow-Origin", "*");
         response.headers().add("Access-Control-Expose-Headers", "*");
         ctx.channel().writeAndFlush(response);
@@ -1083,11 +1088,8 @@ public class IpCameraHandler extends BaseThingHandler {
         final String BOUNDARY = "thisMjpegStream";
         ByteBuf imageByteBuf = Unpooled.copiedBuffer(jpg);
         int length = imageByteBuf.readableBytes();
-        String header = "--" + BOUNDARY + "\r\n" + "content-type: image/jpeg" + "\r\n"
-        // + "Access-Control-Allow-Origin: *" + "\r\n" + "Access-Control-Expose-Headers: *" + "\r\n"
-        // + "Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept" + "\r\n"
-                + "content-length: " + length + "\r\n" // + "Content-Range: bytes 0-" + (length - 1) + "/*" + "\r\n"
-                + "\r\n";
+        String header = "--" + BOUNDARY + "\r\n" + "content-type: image/jpeg" + "\r\n" + "content-length: " + length
+                + "\r\n\r\n";
         ByteBuf headerBbuf = Unpooled.copiedBuffer(header, 0, header.length(), StandardCharsets.UTF_8);
         ByteBuf footerBbuf = Unpooled.copiedBuffer("\r\n", 0, 2, StandardCharsets.UTF_8);
         streamToGroup(headerBbuf, channelGroup, false);
@@ -1154,9 +1156,9 @@ public class IpCameraHandler extends BaseThingHandler {
                                 ffmpegOutputFolder + "ipcamera.m3u8", username, password);
                     }
                 }
-                if (!ffmpegHLS.getIsAlive()) {
+                if (ffmpegHLS != null) {
                     ffmpegHLS.startConverting();
-                    ffmpegHLS.setKeepAlive(60);
+                    // ffmpegHLS.setKeepAlive(60);
                 }
                 break;
             case "DASH":
@@ -1171,7 +1173,9 @@ public class IpCameraHandler extends BaseThingHandler {
                                 ffmpegOutputFolder + "ipcamera.mpd", username, password);
                     }
                 }
-                ffmpegDASH.startConverting();
+                if (ffmpegDASH != null) {
+                    ffmpegDASH.startConverting();
+                }
                 break;
             case "GIF":
                 if (ffmpegGIF == null) {
@@ -1194,7 +1198,9 @@ public class IpCameraHandler extends BaseThingHandler {
                 if (preroll > 0) {
                     storeSnapshots();
                 }
-                ffmpegGIF.startConverting();
+                if (ffmpegGIF != null) {
+                    ffmpegGIF.startConverting();
+                }
                 break;
             case "RTSPHELPER":
                 if (ffmpegRtspHelper != null) {
@@ -1234,7 +1240,9 @@ public class IpCameraHandler extends BaseThingHandler {
                             rtspUri, "-qscale:v 5 -r 6 -update 1", "http://127.0.0.1:" + serverPort + "/ipcamera.jpg",
                             username, password);
                 }
-                ffmpegMjpeg.startConverting();
+                if (ffmpegMjpeg != null) {
+                    ffmpegMjpeg.startConverting();
+                }
                 break;
             case "SNAPSHOT":
                 // if mjpeg stream you can use ffmpeg -i input.h264 -codec:v copy -bsf:v mjpeg2jpeg output%03d.jpg
@@ -1247,7 +1255,9 @@ public class IpCameraHandler extends BaseThingHandler {
                             rtspUri, "-an -vsync vfr -update 1", "http://127.0.0.1:" + serverPort + "/snapshot.jpg",
                             username, password);
                 }
-                ffmpegSnapshot.startConverting();
+                if (ffmpegSnapshot != null) {
+                    ffmpegSnapshot.startConverting();
+                }
                 break;
         }
     }
@@ -1300,7 +1310,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 return result.substring(0, index);
             }
         }
-        return null; // Did not find the String we were searching for
+        return ""; // Did not find the String we were searching for
     }
 
     public String searchString(String rawString, String searchedString) {
@@ -1333,7 +1343,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
             }
         }
-        return null;
+        return "";
     }
 
     @Override
@@ -1363,7 +1373,9 @@ public class IpCameraHandler extends BaseThingHandler {
                 case CHANNEL_START_STREAM:
                     if ("ON".equals(command.toString())) {
                         setupFfmpegFormat("HLS");
-                        ffmpegHLS.setKeepAlive(-1);// will keep running till manually stopped.
+                        if (ffmpegHLS != null) {
+                            ffmpegHLS.setKeepAlive(-1);// will keep running till manually stopped.
+                        }
                     } else {
                         if (ffmpegHLS != null) {
                             ffmpegHLS.stopConverting();
@@ -1433,49 +1445,49 @@ public class IpCameraHandler extends BaseThingHandler {
             case "AMCREST":
                 AmcrestHandler amcrestHandler = new AmcrestHandler(getHandle());
                 amcrestHandler.handleCommand(channelUID, command);
-                if (lowPriorityRequests == null) {
+                if (lowPriorityRequests.isEmpty()) {
                     lowPriorityRequests = amcrestHandler.getLowPriorityRequests();
                 }
                 break;
             case "DAHUA":
                 DahuaHandler dahuaHandler = new DahuaHandler(getHandle(), nvrChannel);
                 dahuaHandler.handleCommand(channelUID, command);
-                if (lowPriorityRequests == null) {
+                if (lowPriorityRequests.isEmpty()) {
                     lowPriorityRequests = dahuaHandler.getLowPriorityRequests();
                 }
                 break;
             case "DOORBIRD":
                 DoorBirdHandler doorBirdHandler = new DoorBirdHandler(getHandle());
                 doorBirdHandler.handleCommand(channelUID, command);
-                if (lowPriorityRequests == null) {
+                if (lowPriorityRequests.isEmpty()) {
                     lowPriorityRequests = doorBirdHandler.getLowPriorityRequests();
                 }
                 break;
             case "HIKVISION":
                 HikvisionHandler hikvisionHandler = new HikvisionHandler(getHandle(), nvrChannel);
                 hikvisionHandler.handleCommand(channelUID, command);
-                if (lowPriorityRequests == null) {
+                if (lowPriorityRequests.isEmpty()) {
                     lowPriorityRequests = hikvisionHandler.getLowPriorityRequests();
                 }
                 break;
             case "FOSCAM":
                 FoscamHandler foscamHandler = new FoscamHandler(getHandle(), username, password);
                 foscamHandler.handleCommand(channelUID, command);
-                if (lowPriorityRequests == null) {
+                if (lowPriorityRequests.isEmpty()) {
                     lowPriorityRequests = foscamHandler.getLowPriorityRequests();
                 }
                 break;
             case "INSTAR":
                 InstarHandler instarHandler = new InstarHandler(getHandle());
                 instarHandler.handleCommand(channelUID, command);
-                if (lowPriorityRequests == null) {
+                if (lowPriorityRequests.isEmpty()) {
                     lowPriorityRequests = instarHandler.getLowPriorityRequests();
                 }
                 break;
             default:
                 HttpOnlyHandler defaultHandler = new HttpOnlyHandler(getHandle());
                 defaultHandler.handleCommand(channelUID, command);
-                if (lowPriorityRequests == null) {
+                if (lowPriorityRequests.isEmpty()) {
                     lowPriorityRequests = defaultHandler.getLowPriorityRequests();
                 }
                 break;
@@ -1495,7 +1507,7 @@ public class IpCameraHandler extends BaseThingHandler {
     }
 
     public String encodeSpecialChars(String text) {
-        String encodedString = null;
+        String encodedString = "";
         try {
             encodedString = URLEncoder.encode(text, "UTF-8").replace("+", "%20");
         } catch (UnsupportedEncodingException e) {
@@ -1514,8 +1526,10 @@ public class IpCameraHandler extends BaseThingHandler {
         listOfOnlineCameraHandlers.add(this);
         listOfOnlineCameraUID.add(getThing().getUID().getId());
         isOnline = true;
-        cameraConnectionJob.cancel(false);
-        cameraConnectionJob = null;
+        if (cameraConnectionJob != null) {
+            cameraConnectionJob.cancel(false);
+            cameraConnectionJob = null;
+        }
         pollCameraJob = pollCamera.scheduleAtFixedRate(pollingCamera, 4000,
                 Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()), TimeUnit.MILLISECONDS);
         logger.info("IP Camera at {} is now online.", ipAddress);
@@ -1566,7 +1580,10 @@ public class IpCameraHandler extends BaseThingHandler {
 
             onvifManager.setOnvifResponseListener(new OnvifResponseListener() {
                 @Override
-                public void onResponse(OnvifDevice thisOnvifCamera, OnvifResponse response) {
+                public void onResponse(@Nullable OnvifDevice thisOnvifCamera, @Nullable OnvifResponse response) {
+                    if (response == null) {
+                        return;
+                    }
                     logger.trace("We got an ONVIF response:{}", response.getXml());
                     if (response.request().toString().contains("org.openhab.binding.ipcamera.onvif.GetSnapshotUri")) {
                         snapshotUri = org.openhab.binding.ipcamera.onvif.GetSnapshotUri
@@ -1585,11 +1602,10 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
 
                 @Override
-                public void onError(OnvifDevice thisOnvifCamera, int errorCode, String errorMessage) {
-                    if (errorCode == -1) {// camera
-                                          // is
-                                          // turned
-                                          // off
+                public void onError(@Nullable OnvifDevice thisOnvifCamera, int errorCode,
+                        @Nullable String errorMessage) {
+                    if (errorCode == -1) {
+                        // Camera may be off?
                         logger.debug("We got an ONVIF error{}:{}", errorCode, errorMessage);
                     } else {
                         logger.warn("We got an ONVIF error{}:{}", errorCode, errorMessage);
@@ -1599,12 +1615,16 @@ public class IpCameraHandler extends BaseThingHandler {
 
             onvifManager.getServices(thisOnvifCamera, new OnvifServicesListener() {
                 @Override
-                public void onServicesReceived(OnvifDevice thisOnvifCamera, OnvifServices paths) {
+                public void onServicesReceived(@Nullable OnvifDevice thisOnvifCamera, @Nullable OnvifServices paths) {
                     logger.debug("We sucessfully connected to a ONVIF SERVICE:{}", paths);
                     logger.debug("Fetching the number of Media Profiles this camera supports.");
                     onvifManager.getMediaProfiles(thisOnvifCamera, new OnvifMediaProfilesListener() {
                         @Override
-                        public void onMediaProfilesReceived(OnvifDevice device, List<OnvifMediaProfile> mediaProfiles) {
+                        public void onMediaProfilesReceived(@Nullable OnvifDevice device,
+                                List<OnvifMediaProfile> mediaProfiles) {
+                            if (mediaProfiles == null) {
+                                return;
+                            }
                             if (selectedMediaProfile >= mediaProfiles.size()) {
                                 logger.warn(
                                         "The selected Media Profile in the binding is higher than the max reported profiles. Changing to use Media Profile 0.");
@@ -1612,16 +1632,19 @@ public class IpCameraHandler extends BaseThingHandler {
                             }
 
                             mediaProfileToken = mediaProfiles.get(selectedMediaProfile).getToken();
-                            ptzHandler = new PTZRequest(ptzManager, thisOnvifCamera, mediaProfileToken);
-
+                            if (thisOnvifCamera != null) {
+                                ptzHandler = new PTZRequest(ptzManager, thisOnvifCamera, mediaProfileToken);
+                            }
                             if (rtspUri.equals("")) {
                                 onvifManager.getMediaStreamURI(thisOnvifCamera, mediaProfiles.get(selectedMediaProfile),
                                         new OnvifMediaStreamURIListener() {
                                             @Override
                                             public void onMediaStreamURIReceived(@Nullable OnvifDevice device,
                                                     @Nullable OnvifMediaProfile profile, @Nullable String uri) {
-                                                logger.debug("We got a ONVIF MEDIA URI:{}", uri);
-                                                rtspUri = uri;
+                                                if (uri != null) {
+                                                    // logger.debug("We got a ONVIF MEDIA URI:{}", uri);
+                                                    rtspUri = uri;
+                                                }
                                             }
                                         });
                             }
@@ -1723,13 +1746,11 @@ public class IpCameraHandler extends BaseThingHandler {
                     }
                     break;
             }
-            if (lowPriorityRequests != null) {
-                if (!lowPriorityRequests.isEmpty()) {
-                    if (lowPriorityCounter >= lowPriorityRequests.size()) {
-                        lowPriorityCounter = 0;
-                    }
-                    sendHttpGET(lowPriorityRequests.get(lowPriorityCounter++));
+            if (!lowPriorityRequests.isEmpty()) {
+                if (lowPriorityCounter >= lowPriorityRequests.size()) {
+                    lowPriorityCounter = 0;
                 }
+                sendHttpGET(lowPriorityRequests.get(lowPriorityCounter++));
             }
             if (ffmpegHLS != null) {
                 ffmpegHLS.checkKeepAlive();
@@ -1852,7 +1873,7 @@ public class IpCameraHandler extends BaseThingHandler {
         }
         basicAuth = ""; // clear out stored password hash
         useDigestAuth = false;
-        firstStreamedMsg = null;
+        // firstStreamedMsg = null;
         startStreamServer(false);
 
         if (pollCameraJob != null) {

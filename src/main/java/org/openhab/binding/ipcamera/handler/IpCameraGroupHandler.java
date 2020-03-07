@@ -34,6 +34,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.library.types.OnOffType;
@@ -66,6 +67,7 @@ import io.netty.handler.timeout.IdleStateHandler;
  * @author Matthew Skinner - Initial contribution
  */
 
+@NonNullByDefault
 public class IpCameraGroupHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = new HashSet<ThingTypeUID>(
@@ -88,13 +90,16 @@ public class IpCameraGroupHandler extends BaseThingHandler {
     int entries = 0;
     BigDecimal numberOfFiles = new BigDecimal(1);
     int mediaSequence = 1;
+    int discontinuitySequence = 0;
 
     public IpCameraGroupHandler(Thing thing) {
         super(thing);
+        config = thing.getConfiguration();
     }
 
+    @SuppressWarnings("null")
     public String getWhiteList() {
-        return config.get(CONFIG_IP_WHITELIST).toString();
+        return (config.get(CONFIG_IP_WHITELIST) == null) ? "" : config.get(CONFIG_IP_WHITELIST).toString();
     }
 
     public String getPlayList() {
@@ -113,7 +118,7 @@ public class IpCameraGroupHandler extends BaseThingHandler {
             String file = handle.config.get(CONFIG_FFMPEG_OUTPUT).toString() + "ipcamera.m3u8";
             camerasm3u8 = new String(Files.readAllBytes(Paths.get(file)));
         } catch (IOException e) {
-            logger.error("error occured:{}", e);
+            logger.error("Error occured fetching cameras m3u8 file :{}", e);
         }
         return camerasm3u8;
     }
@@ -122,6 +127,11 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         int start = string.length();
         for (int loop = numberToRetain; loop > 0; loop--) {
             start = string.lastIndexOf("#EXTINF:", start - 1);
+            if (start == -1) {
+                logger.error(
+                        "Playlist did not contain enough entries, check all cameras in groups use the same HLS settings.");
+                return "";
+            }
         }
         entries = entries + numberToRetain;
         return string.substring(start);
@@ -131,6 +141,11 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         int startingFrom = string.indexOf("#EXTINF:");
         for (int loop = numberToRemove; loop > 0; loop--) {
             startingFrom = string.indexOf("#EXTINF:", startingFrom + 27);
+            if (startingFrom == -1) {
+                logger.error(
+                        "Playlist failed to remove entries from start, check all cameras in groups use the same HLS settings.");
+                return string;
+            }
         }
         mediaSequence = mediaSequence + numberToRemove;
         entries = entries - numberToRemove;
@@ -139,32 +154,37 @@ public class IpCameraGroupHandler extends BaseThingHandler {
 
     int howManySegments(String m3u8File) {
         int start = m3u8File.length();
-        int files = 0;
-        for (BigDecimal totalTime = new BigDecimal(0); totalTime.intValue() < pollTimeInSeconds.intValue(); files++) {
+        int numberOfFiles = 0;
+        for (BigDecimal totalTime = new BigDecimal(0); totalTime.intValue() < pollTimeInSeconds
+                .intValue(); numberOfFiles++) {
             start = m3u8File.lastIndexOf("#EXTINF:", start - 1);
             if (start != -1) {
                 totalTime = totalTime.add(new BigDecimal(m3u8File.substring(start + 8, m3u8File.indexOf(",", start))));
             } else {
+                logger.debug("Group did not find enough segments, lower the poll time if this message continues.");
                 break;
             }
         }
-        return files;
+        return numberOfFiles;
     }
 
     public void createPlayList() {
         String m3u8File = readCamerasPlaylist(cameraIndex);
+        if (m3u8File == "") {
+            return;
+        }
         int numberOfSegments = howManySegments(m3u8File);
         logger.debug("Using {} segmented files to make up a poll period.", numberOfSegments);
         m3u8File = keepLast(m3u8File, numberOfSegments);
-        logger.debug("replacing files to keep now");
+        // logger.debug("replacing files to keep now");
         m3u8File = m3u8File.replace("ipcamera", cameraIndex + "ipcamera"); // add index so we can then fetch output path
-        logger.debug("There are {} segments, so we will remove {} from playlist.", entries, numberOfSegments);
+        // logger.debug("There are {} segments, so we will remove {} from playlist.", entries, numberOfSegments);
         if (entries > numberOfSegments * 3) {
             playingNow = removeFromStart(playingNow, entries - (numberOfSegments * 3));
         }
         playingNow = playingNow + "#EXT-X-DISCONTINUITY\n" + m3u8File;
-        playList = "#EXTM3U\n" + "#EXT-X-VERSION:3\n" + // "#EXT-X-ALLOW-CACHE:NO\n" +
-                "#EXT-X-TARGETDURATION:5\n" + "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n" + playingNow;
+        playList = "#EXTM3U\n#EXT-X-VERSION:6\n#EXT-X-TARGETDURATION:5\n#EXT-X-ALLOW-CACHE:NO\n#EXT-X-DISCONTINUITY-SEQUENCE:"
+                + discontinuitySequence + "\n#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n" + playingNow;
     }
 
     private IpCameraGroupHandler getHandle() {
@@ -192,8 +212,8 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         return ipAddress;
     }
 
+    @SuppressWarnings("null")
     public void startStreamServer(boolean start) {
-
         if (!start) {
             serversLoopGroup.shutdownGracefully(8, 8, TimeUnit.SECONDS);
             serverBootstrap = null;
@@ -236,6 +256,7 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         }
     }
 
+    @SuppressWarnings("null")
     void addCamera(String UniqueID) {
         if (IpCameraHandler.listOfOnlineCameraUID.contains(UniqueID)) {
             for (IpCameraHandler handler : IpCameraHandler.listOfOnlineCameraHandlers) {
@@ -244,7 +265,9 @@ public class IpCameraGroupHandler extends BaseThingHandler {
                         logger.info("Adding {} to a camera group.", UniqueID);
                         if (hlsTurnedOn) {
                             logger.info("Starting HLS for the new camera.");
-                            handler.handleCommand(handler.getThing().getChannel(CHANNEL_START_STREAM).getUID(),
+                            String channelPrefix = "ipcamera:" + handler.getThing().getThingTypeUID() + ":"
+                                    + handler.getThing().getUID().getId() + ":";
+                            handler.handleCommand(new ChannelUID(channelPrefix + CHANNEL_START_STREAM),
                                     OnOffType.valueOf("ON"));
                         }
                         cameraOrder.add(handler);
@@ -300,7 +323,7 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         int checked = 0;
         for (int index = nextCamerasIndex; checked < cameraOrder.size(); checked++) {
             if (cameraOrder.get(index).motionDetected) {
-                logger.debug("Motion detected on a camera in a group and the display order has changed");
+                logger.debug("Motion detected on a camera in a group, the display order has changed.");
                 return index;
             }
             if (++index >= cameraOrder.size()) {
@@ -313,7 +336,6 @@ public class IpCameraGroupHandler extends BaseThingHandler {
     Runnable pollingCameraGroup = new Runnable() {
         @Override
         public void run() {
-
             if (cameraOrder.isEmpty()) {
                 createCameraOrder();
             }
@@ -321,12 +343,14 @@ public class IpCameraGroupHandler extends BaseThingHandler {
                 cameraIndex = 0;
                 if (mediaSequence > 2147000000) {
                     mediaSequence = 0;
+                    discontinuitySequence = 0;
                 }
             }
             if (motionChangesOrder) {
                 cameraIndex = checkForMotion(cameraIndex);
             }
             if (hlsTurnedOn) {
+                discontinuitySequence++;
                 createPlayList();
             }
         }
@@ -338,11 +362,17 @@ public class IpCameraGroupHandler extends BaseThingHandler {
             switch (channelUID.getId()) {
                 case CHANNEL_START_STREAM:
                     if ("ON".equals(command.toString())) {
-                        logger.info("Starting HLS generation for all cameras in group.");
+                        logger.info("Starting HLS generation for all cameras in a group.");
                         hlsTurnedOn = true;
                         for (IpCameraHandler handler : cameraOrder) {
-                            handler.handleCommand(handler.getThing().getChannel(CHANNEL_START_STREAM).getUID(),
+                            String channelPrefix = "ipcamera:" + handler.getThing().getThingTypeUID() + ":"
+                                    + handler.getThing().getUID().getId() + ":";
+
+                            handler.handleCommand(new ChannelUID(channelPrefix + CHANNEL_START_STREAM),
                                     OnOffType.valueOf("ON"));
+
+                            // handler.handleCommand(handler.getThing().getChannel(CHANNEL_START_STREAM).getUID(),
+                            // OnOffType.valueOf("ON"));
                         }
                     } else {
                         // do we turn all off or do we remember the state before we turned them all on?
@@ -354,7 +384,6 @@ public class IpCameraGroupHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
-        logger.debug("initialize() called for a group camera thing.");
         config = thing.getConfiguration();
         serverPort = Integer.parseInt(config.get(CONFIG_SERVER_PORT).toString());
         pollTimeInSeconds = new BigDecimal(config.get(CONFIG_POLL_CAMERA_MS).toString());
@@ -377,7 +406,6 @@ public class IpCameraGroupHandler extends BaseThingHandler {
 
     @Override
     public void dispose() {
-        logger.debug("dispose() called for a group thing.");
         startStreamServer(false);
         IpCameraHandler.listOfGroupHandlers.remove(this);
         if (pollCameraGroupJob != null) {

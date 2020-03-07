@@ -62,7 +62,6 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
     public void setURL(String method, String url) {
         httpUrl = url;
         httpMethod = method;
-        // logger.trace("MyNettyAuthHandler is now setup for \t{}:{}", method, url);
     }
 
     private String calcMD5Hash(String toHash) {
@@ -120,41 +119,41 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
     // First run it should not have authenticate as null
     // nonce is reused if authenticate is null so the NC needs to increment to allow this//
     public String processAuth(String authenticate, String httpMethod, String requestURI, boolean reSend) {
-        if (authenticate != null) {
-            if (authenticate.contains("Basic realm=\"")) {
-                if (myHandler.useDigestAuth == true) {
-                    return "Error:Downgrade authenticate avoided";
-                }
-                logger.debug("Setting up the camera to use Basic Auth and resending last request with correct auth.");
-                myHandler.setBasicAuth(true);
-                myHandler.sendHttpRequest(httpMethod, requestURI, null);
-                return "Using Basic";
+        // if (authenticate != null) {
+        if (authenticate.contains("Basic realm=\"")) {
+            if (myHandler.useDigestAuth == true) {
+                return "Error:Downgrade authenticate avoided";
             }
-
-            /////// Fresh Digest Authenticate method follows as Basic is already handled and returned ////////
-            realm = searchString(authenticate, "realm=\"");
-            if (realm == "") {
-                logger.warn("Could not find a valid WWW-Authenticate response in :{}", authenticate);
-                return "Error";
-            }
-            nonce = searchString(authenticate, "nonce=\"");
-            opaque = searchString(authenticate, "opaque=\"");
-            qop = searchString(authenticate, "qop=\"");
-
-            if (!qop.isEmpty() && !realm.isEmpty()) {
-                myHandler.useDigestAuth = true;
-            } else {
-                logger.warn(
-                        "!!!! Something is wrong with the reply back from the camera. WWW-Authenticate header: qop:{}, realm:{}",
-                        qop, realm);
-            }
-
-            String stale = searchString(authenticate, "stale=\"");
-            if (stale == "") {
-            } else if (stale.equalsIgnoreCase("true")) {
-                logger.debug("Camera reported stale=true which normally means the NONCE has expired.");
-            }
+            logger.debug("Setting up the camera to use Basic Auth and resending last request with correct auth.");
+            myHandler.setBasicAuth(true);
+            myHandler.sendHttpRequest(httpMethod, requestURI, null);
+            return "Using Basic";
         }
+
+        /////// Fresh Digest Authenticate method follows as Basic is already handled and returned ////////
+        realm = searchString(authenticate, "realm=\"");
+        if (realm == "") {
+            logger.warn("Could not find a valid WWW-Authenticate response in :{}", authenticate);
+            return "Error";
+        }
+        nonce = searchString(authenticate, "nonce=\"");
+        opaque = searchString(authenticate, "opaque=\"");
+        qop = searchString(authenticate, "qop=\"");
+
+        if (!qop.isEmpty() && !realm.isEmpty()) {
+            myHandler.useDigestAuth = true;
+        } else {
+            logger.warn(
+                    "!!!! Something is wrong with the reply back from the camera. WWW-Authenticate header: qop:{}, realm:{}",
+                    qop, realm);
+        }
+
+        String stale = searchString(authenticate, "stale=\"");
+        if (stale == "") {
+        } else if (stale.equalsIgnoreCase("true")) {
+            logger.debug("Camera reported stale=true which normally means the NONCE has expired.");
+        }
+        // }
 
         // create the MD5 hashes
         String ha1 = username + ":" + realm + ":" + password;
@@ -183,6 +182,9 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(@Nullable ChannelHandlerContext ctx, @Nullable Object msg) throws Exception {
+        if (msg == null || ctx == null) {
+            return;
+        }
         boolean closeConnection = true;
         String authenticate = null;
         if (msg instanceof HttpResponse) {

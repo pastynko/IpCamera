@@ -43,14 +43,11 @@ public class PTZRequest implements OnvifRequest {
     private Float tiltRangeMax = 1.0f;
     private Float zoomMin = 0.0f;
     private Float zoomMax = 1.0f;
-
     // These hold the PTZ values for updating Openhabs controls in 0-100 range
     private Float currentPanPercentage = 0.0f;
     private Float currentTiltPercentage = 0.0f;
     private Float currentZoomPercentage = 0.0f;
-
     private Float currentPanCamValue = 0.0f;
-    @SuppressWarnings("unused")
     public Float currentTiltCamValue = 0.0f;
     public Float currentZoomCamValue = 0.0f;
     public String ptzNodeToken = "000";
@@ -61,8 +58,7 @@ public class PTZRequest implements OnvifRequest {
     int presetTokenIndex = 0;
     LinkedList<String> presetTokens = new LinkedList<String>();
     String requestType = "GetConfigurations";
-    @Nullable
-    OnvifManager ptzManager = null;
+    OnvifManager ptzManager = new OnvifManager();
     boolean ptzDevice = false;
     private OnvifDevice thisOnvifCamera;
 
@@ -118,6 +114,9 @@ public class PTZRequest implements OnvifRequest {
         ptzManager.setOnvifResponseListener(new OnvifResponseListener() {
             @Override
             public void onResponse(@Nullable OnvifDevice thisOnvifCamera, @Nullable OnvifResponse response) {
+                if (response == null) {
+                    return;
+                }
                 logger.debug("We got an ONVIF ptz response:{}", response.getXml());
                 if (response.getXml().contains("GetStatusResponse")) {
                     processPTZLocation(response.getXml());
@@ -247,15 +246,17 @@ public class PTZRequest implements OnvifRequest {
             case "SetConfiguration":// not tested to work yet
                 return "<SetConfiguration xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><PTZConfiguration><NodeToken>"
                         + ptzNodeToken
-                        + "</NodeToken><DefaultAbsolutePantTiltPositionSpace><DefaultAbsolutePantTiltPositionSpace><DefaultAbsoluteZoomPositionSpace></DefaultAbsoluteZoomPositionSpace></PTZConfiguration></SetConfiguration>";
+                        + "</NodeToken><DefaultAbsolutePantTiltPositionSpace>AbsolutePanTiltPositionSpace</DefaultAbsolutePantTiltPositionSpace><DefaultAbsoluteZoomPositionSpace>AbsoluteZoomPositionSpace</DefaultAbsoluteZoomPositionSpace></PTZConfiguration></SetConfiguration>";
             case "AbsoluteMove":
                 return "<AbsoluteMove xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"><ProfileToken>" + mediaProfileToken
                         + "</ProfileToken><Position><PanTilt x=\"" + currentPanCamValue + "\" y=\""
-                        + currentTiltCamValue + "\" space=\"\">\n" + "                 </PanTilt>\n"
-                        + "                 <Zoom x=\"" + currentZoomCamValue + "\" space=\"\">\n"
-                        + "                 </Zoom>\n" + "                </Position>\n"
-                        + "                <Speed><PanTilt x=\"0.0\" y=\"0.0\" space=\"\"></PanTilt><Zoom x=\"0.0\" space=\"\"></Zoom>\n"
-                        + "                </Speed></AbsoluteMove>";
+                        + currentTiltCamValue
+                        + "\" space=\"http://www.onvif.org/ver10/tptz/PanTiltSpaces/PositionGenericSpace\">\n"
+                        + "</PanTilt>\n" + "<Zoom x=\"" + currentZoomCamValue
+                        + "\" space=\"http://www.onvif.org/ver10/tptz/ZoomSpaces/PositionGenericSpace\">\n"
+                        + "</Zoom>\n" + "</Position>\n"
+                        + "<Speed><PanTilt x=\"0.1\" y=\"0.1\" space=\"http://www.onvif.org/ver10/tptz/PanTiltSpaces/GenericSpeedSpace\"></PanTilt><Zoom x=\"1.0\" space=\"http://www.onvif.org/ver10/tptz/ZoomSpaces/ZoomGenericSpeedSpace\"></Zoom>\n"
+                        + "</Speed></AbsoluteMove>";
             case "GetNodes":
                 return "<GetNodes xmlns=\"http://www.onvif.org/ver20/ptz/wsdl\"></GetNodes>";
             case "GetStatus":

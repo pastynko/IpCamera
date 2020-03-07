@@ -80,7 +80,6 @@ public class Ffmpeg {
         commandArray = ffmpegCommand.trim().split("\\s+");
     }
 
-    @NonNullByDefault
     private class StreamRunning extends Thread {
         public int countOfMotions = 0;
 
@@ -88,36 +87,37 @@ public class Ffmpeg {
         public void run() {
             try {
                 process = Runtime.getRuntime().exec(commandArray);
-                @SuppressWarnings("null")
-                InputStream errorStream = process.getErrorStream();
-                InputStreamReader errorStreamReader = new InputStreamReader(errorStream);
-                BufferedReader bufferedReader = new BufferedReader(errorStreamReader);
-                String line = null;
-                while ((line = bufferedReader.readLine()) != null) {
-                    if (format.equals("RTSPHELPER")) {
-                        logger.debug("{}", line);
-                        if (line.contains("lavfi.")) {
-                            if (countOfMotions == 3) {
-                                ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
-                            } else {
-                                countOfMotions++;
-                            }
-                        } else if (line.contains("speed=")) {
-                            if (countOfMotions > 0) {
-                                countOfMotions--;
-                                if (countOfMotions == 0) {
-                                    ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
+                if (process != null) {
+                    InputStream errorStream = process.getErrorStream();
+                    InputStreamReader errorStreamReader = new InputStreamReader(errorStream);
+                    BufferedReader bufferedReader = new BufferedReader(errorStreamReader);
+                    String line = null;
+                    while ((line = bufferedReader.readLine()) != null) {
+                        if (format.equals("RTSPHELPER")) {
+                            logger.debug("{}", line);
+                            if (line.contains("lavfi.")) {
+                                if (countOfMotions == 3) {
+                                    ipCameraHandler.motionDetected(CHANNEL_MOTION_ALARM);
+                                } else {
+                                    countOfMotions++;
                                 }
+                            } else if (line.contains("speed=")) {
+                                if (countOfMotions > 0) {
+                                    countOfMotions--;
+                                    if (countOfMotions == 0) {
+                                        ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
+                                    }
+                                }
+                            } else if (line.contains("silence_start")) {
+                                ipCameraHandler.setChannelState(CHANNEL_AUDIO_ALARM, OnOffType.valueOf("OFF"));
+                                ipCameraHandler.firstAudioAlarm = false;
+                                ipCameraHandler.audioAlarmUpdateSnapshot = false;
+                            } else if (line.contains("silence_end")) {
+                                ipCameraHandler.audioDetected();
                             }
-                        } else if (line.contains("silence_start")) {
-                            ipCameraHandler.setChannelState(CHANNEL_AUDIO_ALARM, OnOffType.valueOf("OFF"));
-                            ipCameraHandler.firstAudioAlarm = false;
-                            ipCameraHandler.audioAlarmUpdateSnapshot = false;
-                        } else if (line.contains("silence_end")) {
-                            ipCameraHandler.audioDetected();
+                        } else {
+                            logger.debug("{}", line);
                         }
-                    } else {
-                        logger.debug("{}", line);
                     }
                 }
             } catch (IOException e) {
@@ -153,22 +153,24 @@ public class Ffmpeg {
                 }
             }
         }
+        if (keepAlive != -1) {
+            keepAlive = 60;
+        }
     }
 
     public boolean getIsAlive() {
         return running;
     }
 
-    @SuppressWarnings("null")
     public void stopConverting() {
         if (streamRunning.isAlive()) {
             logger.debug("Stopping ffmpeg now");
             running = false;
             if (process != null) {
-                process.destroy();
-                if (process.isAlive()) {
-                    process.destroyForcibly();
-                }
+                // process.destroy();
+                // if (process.isAlive()) {
+                process.destroyForcibly();
+                // }
             }
             keepAlive = 60;
             if (format.equals("HLS")) {

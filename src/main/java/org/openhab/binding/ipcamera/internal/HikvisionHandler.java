@@ -50,7 +50,10 @@ public class HikvisionHandler extends ChannelDuplexHandler {
     // This handles the incoming http replies back from the camera.
     @Override
     public void channelRead(@Nullable ChannelHandlerContext ctx, @Nullable Object msg) throws Exception {
-        String content = null;
+        if (msg == null || ctx == null) {
+            return;
+        }
+        String content = "";
         int debounce = 3;
         try {
             content = msg.toString();
@@ -206,7 +209,6 @@ public class HikvisionHandler extends ChannelDuplexHandler {
             }
         } finally {
             ReferenceCountUtil.release(msg);
-            content = null;
         }
     }
 

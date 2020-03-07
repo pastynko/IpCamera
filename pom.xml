@@ -12,7 +12,7 @@
 	<name>openHAB Add-ons :: Bundles :: IpCamera Binding</name>
 	
 	<properties>
-    <netty.version>4.1.45.Final</netty.version>
+    <netty.version>4.1.46.Final</netty.version>
     <bnd.importpackage>!android.*,!com.android.*,!dalvik.system.*,!kotlin.internal.*,!org.conscrypt.*,!com.sun.net.*,!org.xmlpull.*,!sun.*,!sun.security.*</bnd.importpackage>
   </properties>
 

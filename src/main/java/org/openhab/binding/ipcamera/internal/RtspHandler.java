@@ -91,11 +91,10 @@ public class RtspHandler extends ChannelDuplexHandler {
         return request;
     }
 
+    @SuppressWarnings("null")
     public void setupRTSP() {
-
         if (rtspBootstrap == null) {
             rtspBootstrap = new Bootstrap();
-
             rtspBootstrap.group(mainEventLoopGroup);
             rtspBootstrap.channel(NioSocketChannel.class);
             rtspBootstrap.option(ChannelOption.SO_KEEPALIVE, true);
@@ -152,6 +151,9 @@ public class RtspHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelRead(@Nullable ChannelHandlerContext ctx, @Nullable Object msg) throws Exception {
+        if (msg == null) {
+            return;
+        }
 
         logger.info("{}", msg.toString());
 

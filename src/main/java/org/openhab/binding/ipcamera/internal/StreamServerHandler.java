@@ -21,6 +21,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.ipcamera.handler.IpCameraHandler;
 import org.slf4j.Logger;
@@ -51,12 +52,13 @@ import io.netty.util.ReferenceCountUtil;
  * @author Matthew Skinner - Initial contribution
  */
 
+@NonNullByDefault
 public class StreamServerHandler extends ChannelInboundHandlerAdapter {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private IpCameraHandler ipCameraHandler;
     private boolean handlingMjpeg = false; // used to remove ctx from group when handler is removed.
     private boolean handlingSnapshotStream = false; // used to remove ctx from group when handler is removed.
-    byte[] incomingJpeg = null;
+    byte[] incomingJpeg = new byte[0];
     String whiteList = "";
     int recievedBytes = 0;
     int count = 0;
@@ -73,6 +75,9 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(@Nullable ChannelHandlerContext ctx, @Nullable Object msg) throws Exception {
+        if (ctx == null) {
+            return;
+        }
 
         @Nullable
         HttpContent content = null;
@@ -92,13 +97,16 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                         case "/ipcamera.m3u8":
                             if (ipCameraHandler.ffmpegHLS != null) {
                                 if (!ipCameraHandler.ffmpegHLS.getIsAlive()) {
-                                    ipCameraHandler.ffmpegHLS.setKeepAlive(60);
-                                    ipCameraHandler.ffmpegHLS.startConverting();
+                                    if (ipCameraHandler.ffmpegHLS != null) {
+                                        ipCameraHandler.ffmpegHLS.startConverting();
+                                    }
                                 }
                             } else {
                                 ipCameraHandler.setupFfmpegFormat("HLS");
                             }
-                            ipCameraHandler.ffmpegHLS.setKeepAlive(60);
+                            if (ipCameraHandler.ffmpegHLS != null) {
+                                ipCameraHandler.ffmpegHLS.setKeepAlive(60);
+                            }
                             sendFile(ctx, httpRequest.uri(), "application/x-mpegurl");
                             break;
                         case "/ipcamera.mpd":
@@ -111,7 +119,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             break;
                         case "/ipcamera.jpg":
                             if (!ipCameraHandler.updateImageEvents.contentEquals("1")) {
-                                if (ipCameraHandler.snapshotUri != null) {
+                                if (ipCameraHandler.snapshotUri != "") {
                                     ipCameraHandler.sendHttpGET(ipCameraHandler.snapshotUri);
                                 }
                                 if (ipCameraHandler.currentSnapshot.length == 1) {// no jpg received from camera.
@@ -122,16 +130,16 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             sendSnapshotImage(ctx, "image/jpg");
                             break;
                         case "/snapshots.mjpeg":
-                            ipCameraHandler.setupSnapshotStreaming(true, ctx, false);
                             handlingSnapshotStream = true;
+                            ipCameraHandler.setupSnapshotStreaming(true, ctx, false);
                             break;
                         case "/ipcamera.mjpeg":
                             ipCameraHandler.setupMjpegStreaming(true, ctx);
                             handlingMjpeg = true;
                             break;
                         case "/autofps.mjpeg":
-                            ipCameraHandler.setupSnapshotStreaming(true, ctx, true);
                             handlingSnapshotStream = true;
+                            ipCameraHandler.setupSnapshotStreaming(true, ctx, true);
                             break;
                         case "/instar":
                             InstarHandler instar = new InstarHandler(ipCameraHandler);
@@ -165,7 +173,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                 content = (HttpContent) msg;
                 int index = 0;
 
-                if (incomingJpeg == null) {
+                if (recievedBytes == 0) {
                     incomingJpeg = new byte[content.content().capacity()];
                 } else {
                     byte[] temp = incomingJpeg;
@@ -188,11 +196,13 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             ipCameraHandler.sendMjpegFrame(incomingJpeg, ipCameraHandler.mjpegChannelGroup);
                         }
                     }
-                    incomingJpeg = null;
+                    // incomingJpeg = null;
                     recievedBytes = 0;
                 }
             }
-        } finally {
+        } finally
+
+        {
             ReferenceCountUtil.release(msg);
         }
     }
@@ -234,6 +244,9 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(@Nullable ChannelHandlerContext ctx, @Nullable Throwable cause) throws Exception {
+        if (ctx == null || cause == null) {
+            return;
+        }
         if (cause.toString().contains("Connection reset by peer")) {
             logger.debug("Connection reset by peer.");
         } else if (cause.toString().contains("An established connection was aborted by the software")) {
@@ -251,10 +264,13 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void userEventTriggered(@Nullable ChannelHandlerContext ctx, @Nullable Object evt) throws Exception {
+        if (ctx == null) {
+            return;
+        }
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent e = (IdleStateEvent) evt;
             if (e.state() == IdleState.WRITER_IDLE) {
-                // logger.debug("Stream server is going to close an idle channel.");
+                logger.debug("Stream server is going to close an idle channel.");
                 ctx.close();
             }
         }
@@ -262,7 +278,10 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void handlerRemoved(@Nullable ChannelHandlerContext ctx) {
-        // logger.debug("Closing a StreamServerHandler.");
+        if (ctx == null) {
+            return;
+        }
+        logger.debug("Closing a StreamServerHandler.");
         if (handlingMjpeg) {
             ipCameraHandler.setupMjpegStreaming(false, ctx);
         } else if (handlingSnapshotStream) {

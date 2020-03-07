@@ -28,6 +28,7 @@ import java.net.URLConnection;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
 import org.eclipse.smarthome.config.discovery.DiscoveryResult;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
@@ -48,12 +49,12 @@ import be.teletask.onvif.models.Device;
  *
  * @author Matthew Skinner - Initial contribution
  */
-
+// @NonNullByDefault this is OSGI and needs to be handled differently according to dev guide.
 @Component(service = DiscoveryService.class, immediate = true, configurationPid = "binding.ipcamera")
 public class IpCameraDiscoveryService extends AbstractDiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(IpCameraDiscoveryService.class);
-    public List<Device> devices2 = null;
+    public @Nullable List<Device> devices2 = null;
     private int numberOfCameras = 0;
 
     public IpCameraDiscoveryService() {

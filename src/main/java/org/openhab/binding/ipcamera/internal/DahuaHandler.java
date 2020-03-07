@@ -53,6 +53,9 @@ public class DahuaHandler extends ChannelDuplexHandler {
     // This handles the incoming http replies back from the camera.
     @Override
     public void channelRead(@Nullable ChannelHandlerContext ctx, @Nullable Object msg) throws Exception {
+        if (msg == null || ctx == null) {
+            return;
+        }
         String content = null;
         try {
             content = msg.toString();

@@ -56,8 +56,11 @@ public class InstarHandler extends ChannelDuplexHandler {
     // This handles the incoming http replies back from the camera.
     @Override
     public void channelRead(@Nullable ChannelHandlerContext ctx, @Nullable Object msg) throws Exception {
-        String content = null;
-        String value1 = null;
+        if (msg == null || ctx == null) {
+            return;
+        }
+        String content = "";
+        String value1 = "";
 
         try {
             content = msg.toString();
@@ -79,7 +82,7 @@ public class InstarHandler extends ChannelDuplexHandler {
                         ipCameraHandler.setChannelState(CHANNEL_TEXT_OVERLAY, StringType.valueOf(""));
                     } else {
                         value1 = ipCameraHandler.searchString(content, "var name_1=\"");
-                        if (value1 != null) {
+                        if (!value1.isEmpty()) {
                             ipCameraHandler.setChannelState(CHANNEL_TEXT_OVERLAY, StringType.valueOf(value1));
                         }
                     }
@@ -129,7 +132,6 @@ public class InstarHandler extends ChannelDuplexHandler {
             }
         } finally {
             ReferenceCountUtil.release(msg);
-            content = value1 = null;
         }
     }
 
