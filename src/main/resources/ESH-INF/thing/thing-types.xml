@@ -4,15 +4,15 @@
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
 <thing-type id="GROUPDISPLAY">
-        <label>"GROUPDISPLAY" Display multiple cameras that are ONLINE as a single camera.</label>
-        <description>experimental.</description>
-        <channels>
-        <channel id="startStream" typeId="startStream"/>        
-        <channel id="streamUrl" typeId="streamUrl"/>
-        <channel id="imageUrl" typeId="imageUrl"/>
-        <channel id="hlsUrl" typeId="hlsUrl"/>
-        </channels>
-        <config-description>
+<label>"GROUPDISPLAY" Display multiple cameras that are ONLINE as a single camera.</label>
+<description>experimental.</description>
+<channels>
+<channel id="startStream" typeId="startStream"/>
+<channel id="streamUrl" typeId="streamUrl"/>
+<channel id="imageUrl" typeId="imageUrl"/>
+<channel id="hlsUrl" typeId="hlsUrl"/>
+</channels>
+<config-description>
 
 <parameter-group name="Settings">
 <label>Main Settings</label>
@@ -43,25 +43,25 @@
 <parameter name="FIRST_CAM" type="text" required="true" groupName="Settings">
 <label>FIRST_CAM</label>
 <description>Enter the 'Unique ID' of the camera you wish to show first. 
-</description>    
+</description>
 </parameter>
 
 <parameter name="SECOND_CAM" type="text" required="true" groupName="Settings">
 <label>SECOND_CAM</label>
 <description>Enter the 'Unique ID' of the camera you wish to show second. 
-</description>    
+</description>
 </parameter>
 
 <parameter name="THIRD_CAM" type="text" required="false" groupName="Settings">
 <label>THIRD_CAM</label>
 <description>Enter the 'Unique ID' of the camera you wish to show third. Leave blank if the group is less than 3.
-</description>    
+</description>
 </parameter>
 
 <parameter name="FORTH_CAM" type="text" required="false" groupName="Settings">
 <label>FORTH_CAM</label>
 <description>Enter the 'Unique ID' of the camera you wish to show forth. Leave blank if the group is less than 4.
-</description>    
+</description>
 </parameter>
 
 <parameter name="FFMPEG_LOCATION" type="text" required="false" groupName="Streaming Setup">
@@ -105,10 +105,10 @@
 		<channel id="controlMotionAlarm" typeId="controlMotionAlarm"/>
 		<channel id="motionAlarm" typeId="motionAlarm"/>
 		<channel id="lastMotionType" typeId="lastMotionType"/>		
-        <channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
-        <channel id="audioAlarm" typeId="audioAlarm"/>
-        <channel id="startStream" typeId="startStream"/>
-        <channel id="externalMotion" typeId="externalMotion"/>     
+<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
+<channel id="audioAlarm" typeId="audioAlarm"/>
+<channel id="startStream" typeId="startStream"/>
+<channel id="externalMotion" typeId="externalMotion"/> 
 		<channel id="streamUrl" typeId="streamUrl"/>
 		<channel id="rtspUrl" typeId="rtspUrl"/>
 		<channel id="imageUrl" typeId="imageUrl"/>
@@ -287,10 +287,10 @@ The Image channel and JPG served on request can be set to update in a number of 
 		<channel id="updateGif" typeId="updateGif"/>		
 		<channel id="controlMotionAlarm" typeId="controlMotionAlarm"/>
 		<channel id="externalMotion" typeId="externalMotion"/>
-        <channel id="motionAlarm" typeId="motionAlarm"/>
-        <channel id="lastMotionType" typeId="lastMotionType"/>       
-        <channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
-        <channel id="audioAlarm" typeId="audioAlarm"/>
+<channel id="motionAlarm" typeId="motionAlarm"/>
+<channel id="lastMotionType" typeId="lastMotionType"/>   
+<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
+<channel id="audioAlarm" typeId="audioAlarm"/>
 		<channel id="pan" typeId="pan"/>
 		<channel id="tilt" typeId="tilt"/>
 		<channel id="zoom" typeId="zoom"/>
@@ -1962,11 +1962,11 @@ The Image channel and JPG served on request can be set to update in a number of 
 		</channel-type>
 		
 		<channel-type id="externalMotion">
-        <item-type>Switch</item-type>
-        <label>Externally trigger the Motion Alarm</label>
-        <description>Use other sensors external to the camera like a ZWave PIR sensor to flag that the camera has motion in its field of view.</description>
-        <category>Motion</category>
-        </channel-type>
+<item-type>Switch</item-type>
+<label>Externally trigger the Motion Alarm</label>
+<description>Use other sensors external to the camera like a ZWave PIR sensor to flag that the camera has motion in its field of view.</description>
+<category>Motion</category>
+</channel-type>
 		
 		<channel-type id="controlMotionAlarm">
 		<item-type>Dimmer</item-type>
@@ -2011,10 +2011,10 @@ The Image channel and JPG served on request can be set to update in a number of 
 		</channel-type>
 		
 		<channel-type id="startStream">
-        <item-type>Switch</item-type>
-        <label>Create segments for casting/streaming</label>
-        <description>Lower the delay to start casting the camera by creating the files non stop in case they are needed.</description>
-        </channel-type>
+<item-type>Switch</item-type>
+<label>Create segments for casting/streaming</label>
+<description>Lower the delay to start casting the camera by creating the files non stop in case they are needed.</description>
+</channel-type>
 		
 		<channel-type id="enableLED">
 		<item-type>Dimmer</item-type>

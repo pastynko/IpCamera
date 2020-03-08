@@ -1,6 +1,5 @@
 /**
  * Copyright (c) 2010-2019 Contributors to the openHAB project
-
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -662,7 +661,6 @@ public class IpCameraHandler extends BaseThingHandler {
         private byte[] incomingJpeg = new byte[0];
         private String incomingMessage = "";
         private String contentType = "empty";
-        @Nullable
         private Object reply = new Object();
         private String requestUrl = "";
         private boolean closeConnection = true;
@@ -677,22 +675,20 @@ public class IpCameraHandler extends BaseThingHandler {
             if (msg == null || ctx == null) {
                 return;
             }
-            HttpContent content = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, new HttpMethod("GET"), "");
             try {
-                logger.trace("{}", msg.toString());
+                // logger.trace("{}", msg.toString());
                 if (msg instanceof HttpResponse) {
                     HttpResponse response = (HttpResponse) msg;
                     if (response.status().code() != 401) {
                         if (!response.headers().isEmpty()) {
                             for (String name : response.headers().names()) {
+                                // Some cameras use first letter uppercase and others dont.
                                 switch (name.toLowerCase()) { // Possible localization issues doing this
                                     case "content-type":
                                         contentType = response.headers().getAsString(name);
                                         break;
                                     case "content-length":
                                         bytesToRecieve = Integer.parseInt(response.headers().getAsString(name));
-                                        // new untested
-                                        incomingJpeg = new byte[bytesToRecieve];
                                         break;
                                     case "connection":
                                         if (response.headers().getAsString(name).contains("keep-alive")) {
@@ -704,15 +700,18 @@ public class IpCameraHandler extends BaseThingHandler {
                                             isChunked = true;
                                         }
                                         break;
-                                    case "strict-transport-security":
-                                        if (response.headers().getAsString(name)
-                                                .contains("max-age=63072000; includeSubdomains; preload")) {
-                                            logger.debug(
-                                                    "!! Header matched, this may be a Reolink camera. Closing channel and wont keep it open !!");
-                                            // Reolink cameras send more data than in the content length header.
-                                            closeConnection = true;
-                                        }
-                                        break;
+                                    /*
+                                     * case "strict-transport-security":
+                                     * if (response.headers().getAsString(name)
+                                     * .contains("max-age=63072000; includeSubdomains; preload")) {
+                                     * logger.debug(
+                                     * "!! Header matched, this may be a Reolink camera. Closing channel and wont keep it open !!"
+                                     * );
+                                     * // Reolink cameras send more data than in the content length header.
+                                     * closeConnection = true;
+                                     * }
+                                     * break;
+                                     */
                                 }
                             }
                             if (contentType.contains("multipart")) {
@@ -725,7 +724,14 @@ public class IpCameraHandler extends BaseThingHandler {
                                         streamToGroup(firstStreamedMsg, mjpegChannelGroup, true);
                                     }
                                 }
-                            } else if (closeConnection) {
+                            } else if (contentType.contains("image/jp")) {
+                                if (bytesToRecieve == 0) {
+                                    bytesToRecieve = 768000; // 0.768 Mbyte when no Content-Length is sent
+                                    logger.debug("Camera has no Content-Length header, we have to guess how much RAM.");
+                                }
+                                incomingJpeg = new byte[bytesToRecieve];
+                            }
+                            if (closeConnection) {
                                 lock.lock();
                                 try {
                                     byte indexInLists = (byte) listOfChannels.indexOf(ctx.channel());
@@ -748,40 +754,31 @@ public class IpCameraHandler extends BaseThingHandler {
                         ReferenceCountUtil.retain(msg, 1);
                         streamToGroup(msg, mjpegChannelGroup, true);
                     } else {
-                        content = (HttpContent) msg;
+                        HttpContent content = (HttpContent) msg;
                         // Found some cameras uses Content-Type: image/jpg instead of image/jpeg
                         if (contentType.contains("image/jp")) {
-                            if (bytesToRecieve == 0) {
-                                bytesToRecieve = 768000; // 0.768 Mbyte when no Content-Length is sent
-                                logger.debug("Camera has no Content-Length header, we have to guess how much RAM.");
-                            }
                             for (int i = 0; i < content.content().capacity(); i++) {
                                 incomingJpeg[bytesAlreadyRecieved++] = content.content().getByte(i);
                             }
                             if (content instanceof LastHttpContent) {
-                                if (contentType.contains("image/jp") && bytesAlreadyRecieved != 0) {
-                                    currentSnapshot = incomingJpeg;
-                                    processSnapshot();
-                                    // testing next line and if works need to do a full cleanup of this function.
-                                    closeConnection = true;
-                                    // incomingJpeg = null;
-                                    if (closeConnection) {
-                                        logger.debug("Snapshot recieved: Binding will now close the channel.");
+                                currentSnapshot = incomingJpeg;
+                                processSnapshot();
+                                // testing next line and if works need to do a full cleanup of this function.
+                                closeConnection = true;
+                                if (closeConnection) {
+                                    logger.debug("Snapshot recieved: Binding will now close the channel.");
+                                    ctx.close();
+                                } else {
+                                    lock.lock();
+                                    try {
+                                        byte indexInLists = (byte) listOfChannels.indexOf(ctx.channel());
+                                        if (indexInLists >= 0) {
+                                            listOfChStatus.set(indexInLists, (byte) 2);
+                                        }
+                                    } finally {
+                                        lock.unlock();
                                         bytesToRecieve = 0;
                                         bytesAlreadyRecieved = 0;
-                                        ctx.close();
-                                    } else {
-                                        lock.lock();
-                                        try {
-                                            byte indexInLists = (byte) listOfChannels.indexOf(ctx.channel());
-                                            if (indexInLists >= 0) {
-                                                listOfChStatus.set(indexInLists, (byte) 2);
-                                            }
-                                        } finally {
-                                            lock.unlock();
-                                            bytesToRecieve = 0;
-                                            bytesAlreadyRecieved = 0;
-                                        }
                                     }
                                 }
                             }
@@ -796,15 +793,12 @@ public class IpCameraHandler extends BaseThingHandler {
                                 // If it is not an image send it on to the next handler//
                                 if (bytesAlreadyRecieved != 0) {
                                     reply = incomingMessage;
-                                    incomingMessage = "";
-                                    bytesToRecieve = 0;
-                                    bytesAlreadyRecieved = 0;
                                     super.channelRead(ctx, reply);
                                 }
                             }
                             // HIKVISION alertStream never has a LastHttpContent as it always stays open//
                             if (contentType.contains("multipart")) {
-                                if (!contentType.contains("image/jp") && bytesAlreadyRecieved != 0) {
+                                if (bytesAlreadyRecieved != 0) {
                                     reply = incomingMessage;
                                     incomingMessage = "";
                                     bytesToRecieve = 0;
@@ -815,31 +809,20 @@ public class IpCameraHandler extends BaseThingHandler {
                             // Foscam needs this as will other cameras with chunks//
                             if (isChunked && bytesAlreadyRecieved != 0) {
                                 reply = incomingMessage;
-                                incomingMessage = "";
-                                bytesToRecieve = 0;
-                                bytesAlreadyRecieved = 0;
                                 super.channelRead(ctx, reply);
                             }
                         }
                     }
                 } else { // msg is not HttpContent
                     // logger.debug("Packet back from camera is not matching HttpContent");
-
                     // Foscam and Amcrest cameras need this
                     if (!contentType.contains("image/jp") && bytesAlreadyRecieved != 0) {
                         reply = incomingMessage;
                         logger.debug("Packet back from camera is {}", incomingMessage);
-                        incomingMessage = "";
-                        bytesToRecieve = 0;
-                        bytesAlreadyRecieved = 0;
-                        // TODO: Following line causes NPE that gets safely caught once every few days,
-                        // need to debug...
                         super.channelRead(ctx, reply);
                     }
                 }
-            } finally
-
-            {
+            } finally {
                 ReferenceCountUtil.release(msg);
             }
         }
@@ -871,8 +854,6 @@ public class IpCameraHandler extends BaseThingHandler {
             } finally {
                 lock.unlock();
             }
-            bytesToRecieve = 0;
-            bytesAlreadyRecieved = 0;
         }
 
         @Override
@@ -937,7 +918,6 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
             }
         }
-
     }
 
     public String getLocalIpAddress() {

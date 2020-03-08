@@ -80,6 +80,7 @@ public class Ffmpeg {
         commandArray = ffmpegCommand.trim().split("\\s+");
     }
 
+    @NonNullByDefault
     private class StreamRunning extends Thread {
         public int countOfMotions = 0;
 
