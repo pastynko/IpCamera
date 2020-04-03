@@ -94,7 +94,6 @@
 
 </config-description>
 </thing-type>
-
 	<thing-type id="HTTPONLY">
 		<label>"HTTPONLY" Generic IP camera with only HTTP support.</label>
 		<description>Use when your camera is not ONVIF compatible.</description>
@@ -105,16 +104,16 @@
 		<channel id="controlMotionAlarm" typeId="controlMotionAlarm"/>
 		<channel id="motionAlarm" typeId="motionAlarm"/>
 		<channel id="lastMotionType" typeId="lastMotionType"/>		
-<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
-<channel id="audioAlarm" typeId="audioAlarm"/>
-<channel id="startStream" typeId="startStream"/>
-<channel id="externalMotion" typeId="externalMotion"/> 
+        <channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
+        <channel id="audioAlarm" typeId="audioAlarm"/>
+        <channel id="startStream" typeId="startStream"/>
+        <channel id="externalMotion" typeId="externalMotion"/> 
 		<channel id="streamUrl" typeId="streamUrl"/>
 		<channel id="rtspUrl" typeId="rtspUrl"/>
 		<channel id="imageUrl" typeId="imageUrl"/>
 		<channel id="hlsUrl" typeId="hlsUrl"/>
 		</channels>
-		<config-description>
+<config-description>
 
 <parameter-group name="Settings">
 <label>Main Settings</label>
@@ -218,11 +217,43 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<label>FFMPEG_MJPEG_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
+</description>
+<default>-qscale:v 5 -r 6 -update 1</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<label>FFMPEG_MOTION_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
+</description>
+<default></default>
+<advanced>true</advanced>
+</parameter>
+
 <parameter name="FFMPEG_GIF_OUT_ARGUMENTS" type="text" required="false" groupName="Image Settings">
 <label>FFMPEG_GIF_OUT_ARGUMENTS</label>
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
 <default>-r 2 -filter_complex scale=-2:360:flags=lanczos,setpts=0.5*PTS,split[o1][o2];[o1]palettegen[p];[o2]fifo[o3];[o3][p]paletteuse</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<label>FFMPEG_MJPEG_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
+</description>
+<default>-qscale:v 5 -r 6 -update 1</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<label>FFMPEG_MOTION_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
+</description>
+<default></default>
 <advanced>true</advanced>
 </parameter>
 
@@ -391,6 +422,22 @@ The Image channel and JPG served on request can be set to update in a number of 
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
 <default>-r 2 -filter_complex scale=-2:360:flags=lanczos,setpts=0.5*PTS,split[o1][o2];[o1]palettegen[p];[o2]fifo[o3];[o3][p]paletteuse</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<label>FFMPEG_MJPEG_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
+</description>
+<default>-qscale:v 5 -r 6 -update 1</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<label>FFMPEG_MOTION_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
+</description>
+<default></default>
 <advanced>true</advanced>
 </parameter>
 
@@ -572,6 +619,22 @@ The Image channel and JPG served on request can be set to update in a number of 
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
 <default>-r 2 -filter_complex scale=-2:360:flags=lanczos,setpts=0.5*PTS,split[o1][o2];[o1]palettegen[p];[o2]fifo[o3];[o3][p]paletteuse</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<label>FFMPEG_MJPEG_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
+</description>
+<default>-qscale:v 5 -r 6 -update 1</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<label>FFMPEG_MOTION_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
+</description>
+<default></default>
 <advanced>true</advanced>
 </parameter>
 
@@ -803,6 +866,22 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<label>FFMPEG_MJPEG_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
+</description>
+<default>-qscale:v 5 -r 6 -update 1</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<label>FFMPEG_MOTION_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
+</description>
+<default></default>
+<advanced>true</advanced>
+</parameter>
+
 <parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
@@ -1012,6 +1091,22 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<label>FFMPEG_MJPEG_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
+</description>
+<default>-qscale:v 5 -r 6 -update 1</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<label>FFMPEG_MOTION_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
+</description>
+<default></default>
+<advanced>true</advanced>
+</parameter>
+
 <parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
@@ -1212,6 +1307,22 @@ The Image channel and JPG served on request can be set to update in a number of 
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
 <default>-r 2 -filter_complex scale=-2:360:flags=lanczos,setpts=0.5*PTS,split[o1][o2];[o1]palettegen[p];[o2]fifo[o3];[o3][p]paletteuse</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<label>FFMPEG_MJPEG_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
+</description>
+<default>-qscale:v 5 -r 6 -update 1</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<label>FFMPEG_MOTION_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
+</description>
+<default></default>
 <advanced>true</advanced>
 </parameter>
 
@@ -1443,6 +1554,22 @@ The Image channel and JPG served on request can be set to update in a number of 
 <advanced>true</advanced>
 </parameter>
 
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<label>FFMPEG_MJPEG_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
+</description>
+<default>-qscale:v 5 -r 6 -update 1</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<label>FFMPEG_MOTION_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
+</description>
+<default></default>
+<advanced>true</advanced>
+</parameter>
+
 <parameter name="GIF_PREROLL" type="integer" required="true" min="0" max="30" groupName="Image Settings">
 <label>GIF_PREROLL</label>
 <description>Store this many snapshots from BEFORE you trigger a GIF creation.
@@ -1657,6 +1784,22 @@ The Image channel and JPG served on request can be set to update in a number of 
 <description>This gives you direct access to specify your own ffmpeg options to be used for animated GIF files.
 </description>
 <default>-r 2 -filter_complex scale=-2:360:flags=lanczos,setpts=0.5*PTS,split[o1][o2];[o1]palettegen[p];[o2]fifo[o3];[o3][p]paletteuse</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MJPEG_ARGUMENTS" type="text" required="false" groupName="Streaming Setup">
+<label>FFMPEG_MJPEG_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for ipcamera.mjpeg streams.
+</description>
+<default>-qscale:v 5 -r 6 -update 1</default>
+<advanced>true</advanced>
+</parameter>
+
+<parameter name="FFMPEG_MOTION_ARGUMENTS" type="text" required="false" groupName="Settings">
+<label>FFMPEG_MOTION_ARGUMENTS</label>
+<description>This gives you direct access to specify your own ffmpeg options to be used for detecting motion.
+</description>
+<default></default>
 <advanced>true</advanced>
 </parameter>
 

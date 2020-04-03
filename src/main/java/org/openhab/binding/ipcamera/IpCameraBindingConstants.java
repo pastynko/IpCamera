@@ -60,6 +60,8 @@ public class IpCameraBindingConstants {
     public static final String CONFIG_FFMPEG_OUTPUT = "FFMPEG_OUTPUT";
     public static final String CONFIG_FFMPEG_HLS_OUT_ARGUMENTS = "FFMPEG_HLS_OUT_ARGUMENTS";
     public static final String CONFIG_FFMPEG_GIF_OUT_ARGUMENTS = "FFMPEG_GIF_OUT_ARGUMENTS";
+    public static final String CONFIG_FFMPEG_MJPEG_ARGUMENTS = "FFMPEG_MJPEG_ARGUMENTS";
+    public static final String CONFIG_FFMPEG_MOTION_ARGUMENTS = "FFMPEG_MOTION_ARGUMENTS";
     public static final String CONFIG_GIF_PREROLL = "GIF_PREROLL";
     public static final String CONFIG_GIF_POSTROLL = "GIF_POSTROLL";
     public static final String CONFIG_FIRST_CAM = "FIRST_CAM";

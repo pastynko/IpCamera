@@ -1216,7 +1216,8 @@ public class IpCameraHandler extends BaseThingHandler {
                             .concat(" -vf select='gte(scene," + motionThreshold + ")',metadata=print");
                 }
                 ffmpegRtspHelper = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), inOptions,
-                        rtspUri, filterOptions, OutputOptions, username, password);
+                        rtspUri, filterOptions + config.get(CONFIG_FFMPEG_MOTION_ARGUMENTS), OutputOptions, username,
+                        password);
                 ffmpegRtspHelper.startConverting();
                 break;
             case "MJPEG":
@@ -1226,8 +1227,8 @@ public class IpCameraHandler extends BaseThingHandler {
                         inOptions = "";
                     }
                     ffmpegMjpeg = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), inOptions,
-                            rtspUri, "-qscale:v 5 -r 6 -update 1", "http://127.0.0.1:" + serverPort + "/ipcamera.jpg",
-                            username, password);
+                            rtspUri, config.get(CONFIG_FFMPEG_MJPEG_ARGUMENTS).toString(),
+                            "http://127.0.0.1:" + serverPort + "/ipcamera.jpg", username, password);
                 }
                 if (ffmpegMjpeg != null) {
                     ffmpegMjpeg.startConverting();
