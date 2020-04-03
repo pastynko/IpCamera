@@ -162,7 +162,7 @@ public class DahuaHandler extends ChannelDuplexHandler {
         if (command.toString() == "REFRESH") {
             switch (channelUID.getId()) {
                 case CHANNEL_THRESHOLD_AUDIO_ALARM:
-                    ipCameraHandler.sendHttpGET("/cgi-bin/configManager.cgi?action=getConfig&name=AudioDetect[0]");
+                    // ipCameraHandler.sendHttpGET("/cgi-bin/configManager.cgi?action=getConfig&name=AudioDetect[0]");
                     return;
                 case CHANNEL_ENABLE_AUDIO_ALARM:
                     ipCameraHandler.sendHttpGET("/cgi-bin/configManager.cgi?action=getConfig&name=AudioDetect[0]");

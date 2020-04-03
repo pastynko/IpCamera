@@ -119,7 +119,6 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
     // First run it should not have authenticate as null
     // nonce is reused if authenticate is null so the NC needs to increment to allow this//
     public String processAuth(String authenticate, String httpMethod, String requestURI, boolean reSend) {
-        // if (authenticate != null) {
         if (authenticate.contains("Basic realm=\"")) {
             if (myHandler.useDigestAuth == true) {
                 return "Error:Downgrade authenticate avoided";
@@ -153,8 +152,6 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
         } else if (stale.equalsIgnoreCase("true")) {
             logger.debug("Camera reported stale=true which normally means the NONCE has expired.");
         }
-        // }
-
         // create the MD5 hashes
         String ha1 = username + ":" + realm + ":" + password;
         ha1 = calcMD5Hash(ha1);
@@ -198,11 +195,12 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
                             }
                             if (name.toString().equalsIgnoreCase("Connection")
                                     && value.toString().contains("keep-alive")) {
-                                closeConnection = false;
+                                // closeConnection = false;
+                                // trial this for a while to see if it solves too many bytes with digest turned on.
+                                closeConnection = true;
                             }
                         }
                     }
-
                     myHandler.lock.lock();
                     try {
                         byte indexInLists = (byte) myHandler.listOfChannels.indexOf(ctx.channel());
@@ -210,22 +208,15 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
                             if (closeConnection) {
                                 // Need to mark the channel as closing so the digest gets a new ch
                                 myHandler.listOfChStatus.set(indexInLists, (byte) 0);
-                                // logger.debug("401: Mark as closing, the channel:{} \t{}:{}", indexInLists,
-                                // httpMethod,
-                                // httpUrl);
                             } else {
                                 myHandler.listOfChStatus.set(indexInLists, (byte) 2);
-                                // logger.debug("401: Mark to re-use, the channel:{} \t{}:{}", indexInLists, httpMethod,
-                                // httpUrl);
                             }
-
                         } else {
                             logger.warn("!!!! 401: Could not find the channel to mark as closing or reusable");
                         }
                     } finally {
                         myHandler.lock.unlock();
                     }
-
                     if (authenticate != null) {
                         processAuth(authenticate, httpMethod, httpUrl, true);
                     } else {
@@ -248,11 +239,5 @@ public class MyNettyAuthHandler extends ChannelDuplexHandler {
 
     @Override
     public void handlerRemoved(@Nullable ChannelHandlerContext ctx) {
-        /*
-         * logger = null;
-         * myHandler = null;
-         * username = password = httpMethod = httpUrl = null;
-         * nonce = opaque = qop = realm = null;
-         */
     }
 }

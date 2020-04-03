@@ -42,14 +42,12 @@ import io.netty.handler.codec.rtsp.RtspVersions;
 import io.netty.util.CharsetUtil;
 
 /**
- * The {@link Ffmpeg} is responsible for handling the ffmpeg conversions
+ * The {@link RtspHandler} is a WIP and is currently not used. Will be able to report what format the stream is in mjpeg
+ * or h264/5.
  *
  *
  * @author Matthew Skinner - Initial contribution
  */
-
-// Class is my custom implementation for RTSP with netty, aim is to ask stream what format it is and more
-// was working before it was moved into its own handler. WIP
 
 @NonNullByDefault
 public class RtspHandler extends ChannelDuplexHandler {

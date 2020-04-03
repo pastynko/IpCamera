@@ -49,7 +49,9 @@ import be.teletask.onvif.models.Device;
  *
  * @author Matthew Skinner - Initial contribution
  */
-// @NonNullByDefault this is OSGI and needs to be handled differently according to dev guide.
+
+// @NonNullByDefault
+@SuppressWarnings("null")
 @Component(service = DiscoveryService.class, immediate = true, configurationPid = "binding.ipcamera")
 public class IpCameraDiscoveryService extends AbstractDiscoveryService {
 

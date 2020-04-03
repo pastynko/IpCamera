@@ -200,6 +200,7 @@ public class IpCameraHandler extends BaseThingHandler {
     public int serverPort = 0;
     private Object firstStreamedMsg = new Object();
     public byte[] currentSnapshot = new byte[] { (byte) 0x00 };
+    public ReentrantLock lockCurrentSnapshot = new ReentrantLock();
     private String rtspUri = "";
     public String ipAddress = "empty";
     public String updateImageEvents = "";
@@ -520,7 +521,7 @@ public class IpCameraHandler extends BaseThingHandler {
             }
         }
 
-        logger.debug("Sending camera: {}: http://{}{}", httpMethod, ipAddress, httpRequestURL);
+        logger.trace("Sending camera: {}: http://{}{}", httpMethod, ipAddress, httpRequestURL);
         lock.lock();
 
         byte indexInLists = -1;
@@ -627,6 +628,7 @@ public class IpCameraHandler extends BaseThingHandler {
     }
 
     public void processSnapshot() {
+        lockCurrentSnapshot.lock();
         if (updateImage) {
             updateState(CHANNEL_IMAGE, new RawType(currentSnapshot, "image/jpeg"));
         }
@@ -650,6 +652,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 fifoSnapshotBuffer.removeFirst();
             }
         }
+        lockCurrentSnapshot.unlock();
     }
 
     // These methods handle the response from all Camera brands, nothing specific to
@@ -676,7 +679,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 return;
             }
             try {
-                // logger.trace("{}", msg.toString());
+                logger.trace("{}", msg.toString());
                 if (msg instanceof HttpResponse) {
                     HttpResponse response = (HttpResponse) msg;
                     if (response.status().code() != 401) {
@@ -761,12 +764,14 @@ public class IpCameraHandler extends BaseThingHandler {
                                 incomingJpeg[bytesAlreadyRecieved++] = content.content().getByte(i);
                             }
                             if (content instanceof LastHttpContent) {
+                                lockCurrentSnapshot.lock();
                                 currentSnapshot = incomingJpeg;
+                                lockCurrentSnapshot.unlock();
                                 processSnapshot();
                                 // testing next line and if works need to do a full cleanup of this function.
                                 closeConnection = true;
                                 if (closeConnection) {
-                                    logger.debug("Snapshot recieved: Binding will now close the channel.");
+                                    logger.trace("Snapshot recieved: Binding will now close the channel.");
                                     ctx.close();
                                 } else {
                                     lock.lock();
@@ -991,13 +996,17 @@ public class IpCameraHandler extends BaseThingHandler {
             sendMjpegFirstPacket(ctx);
             if (auto) {
                 autoSnapshotMjpegChannelGroup.add(ctx.channel());
+                lockCurrentSnapshot.lock();
                 sendMjpegFrame(currentSnapshot, autoSnapshotMjpegChannelGroup);
                 // iOS uses a FIFO? and needs two frames to display a pic
                 sendMjpegFrame(currentSnapshot, autoSnapshotMjpegChannelGroup);
+                lockCurrentSnapshot.unlock();
                 streamingAutoFps = true;
             } else {
                 snapshotMjpegChannelGroup.add(ctx.channel());
+                lockCurrentSnapshot.lock();
                 sendMjpegFrame(currentSnapshot, snapshotMjpegChannelGroup);
+                lockCurrentSnapshot.unlock();
                 streamingSnapshotMjpeg = true;
             }
         } else {
@@ -1596,8 +1605,10 @@ public class IpCameraHandler extends BaseThingHandler {
             onvifManager.getServices(thisOnvifCamera, new OnvifServicesListener() {
                 @Override
                 public void onServicesReceived(@Nullable OnvifDevice thisOnvifCamera, @Nullable OnvifServices paths) {
-                    logger.debug("We sucessfully connected to a ONVIF SERVICE:{}", paths);
-                    logger.debug("Fetching the number of Media Profiles this camera supports.");
+                    if (paths == null) {
+                        return;
+                    }
+                    logger.debug("We sucessfully connected to a ONVIF SERVICE:{}", paths.getDeviceInformationPath());
                     onvifManager.getMediaProfiles(thisOnvifCamera, new OnvifMediaProfilesListener() {
                         @Override
                         public void onMediaProfilesReceived(@Nullable OnvifDevice device,
@@ -1622,7 +1633,6 @@ public class IpCameraHandler extends BaseThingHandler {
                                             public void onMediaStreamURIReceived(@Nullable OnvifDevice device,
                                                     @Nullable OnvifMediaProfile profile, @Nullable String uri) {
                                                 if (uri != null) {
-                                                    // logger.debug("We got a ONVIF MEDIA URI:{}", uri);
                                                     rtspUri = uri;
                                                 }
                                             }
@@ -1756,7 +1766,6 @@ public class IpCameraHandler extends BaseThingHandler {
 
     @Override
     public void initialize() {
-        // logger.debug("initialize() called.");
         config = thing.getConfiguration();
         ipAddress = config.get(CONFIG_IPADDRESS).toString();
         username = (config.get(CONFIG_USERNAME) == null) ? "" : config.get(CONFIG_USERNAME).toString();

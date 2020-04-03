@@ -151,8 +151,10 @@ public class StreamServerGroupHandler extends ChannelInboundHandlerAdapter {
 
     private void sendSnapshotImage(ChannelHandlerContext ctx, String contentType) throws IOException {
         HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+        ipCameraGroupHandler.cameraOrder.get(ipCameraGroupHandler.cameraIndex).lockCurrentSnapshot.lock();
         ByteBuf snapshotData = Unpooled
                 .copiedBuffer(ipCameraGroupHandler.cameraOrder.get(ipCameraGroupHandler.cameraIndex).currentSnapshot);
+        ipCameraGroupHandler.cameraOrder.get(ipCameraGroupHandler.cameraIndex).lockCurrentSnapshot.unlock();
         response.headers().add(HttpHeaderNames.CONTENT_TYPE, contentType);
         response.headers().set(HttpHeaderNames.CACHE_CONTROL, HttpHeaderValues.NO_CACHE);
         response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
