@@ -1725,14 +1725,14 @@ public class IpCameraHandler extends BaseThingHandler {
                 case "DAHUA":
                     // Check for alarms, channel for NVRs appears not to work at filtering.
                     if (streamIsStopped("/cgi-bin/eventManager.cgi?action=attach&codes=[All]")) {
-                        logger.warn("The alarm stream was not running for camera {}, re-starting it now", ipAddress);
+                        logger.info("The alarm stream was not running for camera {}, re-starting it now", ipAddress);
                         sendHttpGET("/cgi-bin/eventManager.cgi?action=attach&codes=[All]");
                     }
                     break;
                 case "DOORBIRD":
                     // Check for alarms, channel for NVRs appears not to work at filtering.
                     if (streamIsStopped("/bha-api/monitor.cgi?ring=doorbell,motionsensor")) {
-                        logger.warn("The alarm stream was not running for camera {}, re-starting it now", ipAddress);
+                        logger.info("The alarm stream was not running for camera {}, re-starting it now", ipAddress);
                         sendHttpGET("/bha-api/monitor.cgi?ring=doorbell,motionsensor");
                     }
                     break;
@@ -1752,7 +1752,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 scheduledMovePTZ.schedule(runnableMovePTZ, 50, TimeUnit.MILLISECONDS);
             }
             if (listOfRequests.size() > 12) {
-                logger.info(
+                logger.debug(
                         "There are {} channels being tracked, cleaning out old channels now to try and reduce this to 12 or below.",
                         listOfRequests.size());
                 cleanChannels();
