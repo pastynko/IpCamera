@@ -867,7 +867,7 @@ public class IpCameraHandler extends BaseThingHandler {
                 return;
             }
             if (cause.toString().contains("java.lang.ArrayIndexOutOfBoundsException")) {
-                logger.warn("Camera sent {} bytes when the content-length header was {}.", bytesAlreadyRecieved,
+                logger.debug("Camera sent {} bytes when the content-length header was {}.", bytesAlreadyRecieved,
                         bytesToRecieve);
             } else {
                 logger.warn("!!!! Camera possibly closed the channel on the binding, cause reported is: {}", cause);
@@ -974,7 +974,7 @@ public class IpCameraHandler extends BaseThingHandler {
                     });
                     serverFuture = serverBootstrap.bind().sync();
                     serverFuture.await(4000);
-                    logger.info("IpCamera file server for camera {} has started on port {} for all NIC's.", ipAddress,
+                    logger.info("File server for camera at {} has started on port {} for all NIC's.", ipAddress,
                             serverPort);
                     updateState(CHANNEL_STREAM_URL,
                             new StringType("http://" + hostIp + ":" + serverPort + "/ipcamera.mjpeg"));
@@ -1522,7 +1522,7 @@ public class IpCameraHandler extends BaseThingHandler {
         }
         pollCameraJob = pollCamera.scheduleAtFixedRate(pollingCamera, 4000,
                 Integer.parseInt(config.get(CONFIG_POLL_CAMERA_MS).toString()), TimeUnit.MILLISECONDS);
-        logger.info("IP Camera at {} is now online.", ipAddress);
+        // logger.info("IP Camera at {} is now online.", ipAddress);
 
         if (!rtspUri.equals("")) {
             updateState(CHANNEL_RTSP_URL, new StringType(rtspUri));
@@ -1714,7 +1714,7 @@ public class IpCameraHandler extends BaseThingHandler {
                     break;
                 case "HIKVISION":
                     if (streamIsStopped("/ISAPI/Event/notification/alertStream")) {
-                        logger.warn("The alarm stream was not running for camera {}, re-starting it now", ipAddress);
+                        logger.info("The alarm stream was not running for camera {}, re-starting it now", ipAddress);
                         sendHttpGET("/ISAPI/Event/notification/alertStream");
                     }
                     break;

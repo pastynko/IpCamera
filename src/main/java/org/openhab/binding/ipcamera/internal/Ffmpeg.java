@@ -168,10 +168,7 @@ public class Ffmpeg {
             logger.debug("Stopping ffmpeg now");
             running = false;
             if (process != null) {
-                // process.destroy();
-                // if (process.isAlive()) {
                 process.destroyForcibly();
-                // }
             }
             keepAlive = 60;
             if (format.equals("HLS")) {

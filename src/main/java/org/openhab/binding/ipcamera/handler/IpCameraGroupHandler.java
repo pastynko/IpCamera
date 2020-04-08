@@ -341,10 +341,6 @@ public class IpCameraGroupHandler extends BaseThingHandler {
             }
             if (++cameraIndex >= cameraOrder.size()) {
                 cameraIndex = 0;
-                if (mediaSequence > 2147000000) {
-                    mediaSequence = 0;
-                    discontinuitySequence = 0;
-                }
             }
             if (motionChangesOrder) {
                 cameraIndex = checkForMotion(cameraIndex);
@@ -352,6 +348,10 @@ public class IpCameraGroupHandler extends BaseThingHandler {
             if (hlsTurnedOn) {
                 discontinuitySequence++;
                 createPlayList();
+                if (mediaSequence > 2147000000) {
+                    mediaSequence = 0;
+                    discontinuitySequence = 0;
+                }
             }
         }
     };
@@ -370,9 +370,6 @@ public class IpCameraGroupHandler extends BaseThingHandler {
 
                             handler.handleCommand(new ChannelUID(channelPrefix + CHANNEL_START_STREAM),
                                     OnOffType.valueOf("ON"));
-
-                            // handler.handleCommand(handler.getThing().getChannel(CHANNEL_START_STREAM).getUID(),
-                            // OnOffType.valueOf("ON"));
                         }
                     } else {
                         // do we turn all off or do we remember the state before we turned them all on?
