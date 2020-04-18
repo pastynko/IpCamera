@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -1135,12 +1135,12 @@ public class IpCameraHandler extends BaseThingHandler {
                 if (ffmpegHLS == null) {
                     if (rtspUri.contains(":554")) {
                         ffmpegHLS = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
-                                "-hide_banner -loglevel panic -rtsp_transport tcp", rtspUri,
+                                "-hide_banner -loglevel warning -rtsp_transport tcp", rtspUri,
                                 config.get(CONFIG_FFMPEG_HLS_OUT_ARGUMENTS).toString(),
                                 ffmpegOutputFolder + "ipcamera.m3u8", username, password);
                     } else {
                         ffmpegHLS = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
-                                "-hide_banner -loglevel panic", rtspUri,
+                                "-hide_banner -loglevel warning", rtspUri,
                                 config.get(CONFIG_FFMPEG_HLS_OUT_ARGUMENTS).toString(),
                                 ffmpegOutputFolder + "ipcamera.m3u8", username, password);
                     }
@@ -1154,11 +1154,13 @@ public class IpCameraHandler extends BaseThingHandler {
                 if (ffmpegDASH == null) {
                     if (rtspUri.contains(":554")) {
                         ffmpegDASH = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
-                                "-rtsp_transport tcp", rtspUri, "-strict -2 -c:a aac -vcodec copy -b:v 1000k -f dash",
+                                "-rtsp_transport tcp -hide_banner -loglevel warning", rtspUri,
+                                "-strict -2 -c:a aac -vcodec copy -b:v 1000k -f dash",
                                 ffmpegOutputFolder + "ipcamera.mpd", username, password);
                     } else {
-                        ffmpegDASH = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), "",
-                                rtspUri, "-strict -2 -c:a aac -vcodec copy -b:v 1000k -f dash",
+                        ffmpegDASH = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
+                                "-hide_banner -loglevel warning", rtspUri,
+                                "-strict -2 -c:a aac -vcodec copy -b:v 1000k -f dash",
                                 ffmpegOutputFolder + "ipcamera.mpd", username, password);
                     }
                 }
@@ -1169,13 +1171,13 @@ public class IpCameraHandler extends BaseThingHandler {
             case "GIF":
                 if (ffmpegGIF == null) {
                     if (preroll > 0) {
-                        ffmpegGIF = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), "-y -r 1",
-                                ffmpegOutputFolder + "snapshot%d.jpg",
+                        ffmpegGIF = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(),
+                                "-y -r 1 -hide_banner -loglevel warning", ffmpegOutputFolder + "snapshot%d.jpg",
                                 "-frames:v " + (preroll + postroll) + " "
                                         + config.get(CONFIG_FFMPEG_GIF_OUT_ARGUMENTS).toString(),
                                 ffmpegOutputFolder + "ipcamera.gif", username, password);
                     } else {
-                        inOptions = "-y -t " + postroll + " -rtsp_transport tcp";
+                        inOptions = "-y -t " + postroll + " -rtsp_transport tcp -hide_banner -loglevel warning";
                         if (!rtspUri.contains("rtsp")) {
                             inOptions = "-y -t " + postroll;
                         }
@@ -1200,9 +1202,9 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
                 String OutputOptions = "-f null -";
                 String filterOptions = "";
-                inOptions = "-rtsp_transport tcp";
+                inOptions = "-rtsp_transport tcp -hide_banner -loglevel warning";
                 if (!rtspUri.contains("rtsp")) {
-                    inOptions = "";
+                    inOptions = "-hide_banner -loglevel warning";
                 }
                 if (audioAlarmEnabled == false) {
                     filterOptions = "-an";
@@ -1222,9 +1224,9 @@ public class IpCameraHandler extends BaseThingHandler {
                 break;
             case "MJPEG":
                 if (ffmpegMjpeg == null) {
-                    inOptions = "-rtsp_transport tcp";
+                    inOptions = "-rtsp_transport tcp -hide_banner -loglevel warning";
                     if (!rtspUri.contains("rtsp")) {
-                        inOptions = "";
+                        inOptions = "-hide_banner -loglevel warning";
                     }
                     ffmpegMjpeg = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), inOptions,
                             rtspUri, config.get(CONFIG_FFMPEG_MJPEG_ARGUMENTS).toString(),
@@ -1237,9 +1239,10 @@ public class IpCameraHandler extends BaseThingHandler {
             case "SNAPSHOT":
                 // if mjpeg stream you can use ffmpeg -i input.h264 -codec:v copy -bsf:v mjpeg2jpeg output%03d.jpg
                 if (ffmpegSnapshot == null) {
-                    inOptions = "-rtsp_transport tcp -threads 1 -skip_frame nokey";// iFrames only
+                    inOptions = "-rtsp_transport tcp -threads 1 -skip_frame nokey -hide_banner -loglevel warning";// iFrames
+                                                                                                                  // only
                     if (!rtspUri.contains("rtsp")) {
-                        inOptions = "-threads 1 -skip_frame nokey";
+                        inOptions = "-threads 1 -skip_frame nokey -hide_banner -loglevel warning";
                     }
                     ffmpegSnapshot = new Ffmpeg(this, format, config.get(CONFIG_FFMPEG_LOCATION).toString(), inOptions,
                             rtspUri, "-an -vsync vfr -update 1", "http://127.0.0.1:" + serverPort + "/snapshot.jpg",

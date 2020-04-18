@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -123,9 +123,7 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                     byte indexInLists = (byte) ipCameraHandler.listOfRequests
                             .indexOf("/ISAPI/System/Video/inputs/channels/" + nvrChannel + "01/motionDetection");
                     if (indexInLists >= 0) {
-                        ipCameraHandler.logger.debug(
-                                "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Storing new Motion reply {}",
-                                content);
+                        ipCameraHandler.logger.debug("Storing new Motion reply {}", content);
                         ipCameraHandler.listOfReplies.set(indexInLists, content);
                     }
                 } finally {
@@ -143,9 +141,7 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                     byte indexInLists = (byte) ipCameraHandler.listOfRequests
                             .indexOf("/ISAPI/Smart/LineDetection/" + nvrChannel + "01");
                     if (indexInLists >= 0) {
-                        ipCameraHandler.logger.debug(
-                                "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Storing new Line Crossing reply {}",
-                                content);
+                        ipCameraHandler.logger.debug("Storing new Line Crossing reply {}", content);
                         ipCameraHandler.listOfReplies.set(indexInLists, content);
                     }
                 } finally {
@@ -193,9 +189,7 @@ public class HikvisionHandler extends ChannelDuplexHandler {
                     byte indexInLists = (byte) ipCameraHandler.listOfRequests
                             .indexOf("/ISAPI/Smart/FieldDetection/" + nvrChannel + "01");
                     if (indexInLists >= 0) {
-                        ipCameraHandler.logger.debug(
-                                "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Storing new FieldDetection reply {}",
-                                content);
+                        ipCameraHandler.logger.debug("Storing new FieldDetection reply {}", content);
                         ipCameraHandler.listOfReplies.set(indexInLists, content);
                     }
                 } finally {

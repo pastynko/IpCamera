@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2019 Contributors to the openHAB project
+ * Copyright (c) 2010-2020 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -323,7 +323,7 @@ public class IpCameraGroupHandler extends BaseThingHandler {
         int checked = 0;
         for (int index = nextCamerasIndex; checked < cameraOrder.size(); checked++) {
             if (cameraOrder.get(index).motionDetected) {
-                logger.debug("Motion detected on a camera in a group, the display order has changed.");
+                // logger.trace("Motion detected on a camera in a group, the display order has changed.");
                 return index;
             }
             if (++index >= cameraOrder.size()) {
