@@ -1537,11 +1537,25 @@ public class IpCameraHandler extends BaseThingHandler {
         }
     }
 
+    void snapshotIsFfmpeg() {
+        bringCameraOnline();
+        snapshotUri = "";// ffmpeg is a valid option. Simplify further checks.
+        if (updateImageEvents.equals("1")) {
+            logger.info("Binding has no snapshot url. Using your CPU and Ffmpeg to create snapshots.");
+            ffmpegSnapshotGeneration = true;
+            setupFfmpegFormat("SNAPSHOT");
+            updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("ON"));
+        }
+    }
+
     Runnable pollingCameraConnection = new Runnable() {
         @Override
         public void run() {
             if (thing.getThingTypeUID().getId().equals("HTTPONLY")) {
-                if (!snapshotUri.equals("")) {
+                if (rtspUri.equals("")) {
+                    logger.warn("Binding has not been supplied with a RTSP URL so some features will not work.");
+                }
+                if (!snapshotUri.equals("") && !snapshotUri.equals("ffmpeg")) {
                     logger.debug("Camera at {} has a snapshot address of:{}:", ipAddress, snapshotUri);
                     if (sendHttpRequest("GET", snapshotUri, null)) {
                         bringCameraOnline();
@@ -1550,17 +1564,7 @@ public class IpCameraHandler extends BaseThingHandler {
                         }
                     }
                 } else {
-                    bringCameraOnline();
-                    if (!rtspUri.equals("") && updateImageEvents.equals("1")) {
-                        logger.info(
-                                "Binding has no snapshot url, and is set to always update images. Using your CPU to create snapshots with Ffmpeg.");
-                        ffmpegSnapshotGeneration = true;
-                        setupFfmpegFormat("SNAPSHOT");
-                        updateState(CHANNEL_UPDATE_IMAGE_NOW, OnOffType.valueOf("ON"));
-                    } else {
-                        logger.warn(
-                                "Binding has no snapshot URL so to create jpg files non stop using ffmpeg either set UPDATE_IMAGE_EVENTS to 1, or to start and stop on demand use the updateImageNow channel.");
-                    }
+                    snapshotIsFfmpeg();
                 }
                 return;
             }
@@ -1657,7 +1661,9 @@ public class IpCameraHandler extends BaseThingHandler {
                 }
             });
 
-            if (!snapshotUri.equals("")) {
+            if (snapshotUri.equals("ffmpeg")) {
+                snapshotIsFfmpeg();
+            } else if (!snapshotUri.equals("")) {
                 if (sendHttpRequest("GET", snapshotUri, null)) {
                     bringCameraOnline();
                     if (updateImage) {

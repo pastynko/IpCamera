@@ -40,6 +40,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
@@ -93,7 +94,9 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                     logger.warn("The request made from {} was not in the whitelist and will be ignored.", requestIP);
                     return;
                 } else if ("GET".equalsIgnoreCase(httpRequest.method().toString())) {
-                    switch (httpRequest.uri()) {
+                    // Some browsers send a query string after the path when refreshing a picture.
+                    QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri());
+                    switch (queryStringDecoder.path()) {
                         case "/ipcamera.m3u8":
                             if (ipCameraHandler.ffmpegHLS != null) {
                                 if (!ipCameraHandler.ffmpegHLS.getIsAlive()) {
