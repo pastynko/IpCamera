@@ -59,7 +59,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
     private IpCameraHandler ipCameraHandler;
     private boolean handlingMjpeg = false; // used to remove ctx from group when handler is removed.
     private boolean handlingSnapshotStream = false; // used to remove ctx from group when handler is removed.
-    byte[] incomingJpeg = new byte[0];
+    private byte[] incomingJpeg = new byte[0];
     String whiteList = "";
     int recievedBytes = 0;
     int count = 0;
@@ -83,17 +83,19 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         @Nullable
         HttpContent content = null;
         try {
-            // logger.info("{}", msg);
             if (msg instanceof HttpRequest) {
                 HttpRequest httpRequest = (HttpRequest) msg;
-                // logger.debug("{}", httpRequest);
                 logger.debug("Stream Server recieved request \t{}:{}", httpRequest.method(), httpRequest.uri());
-                String requestIP = "("
-                        + ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress() + ")";
-                if (!whiteList.contains(requestIP) && !whiteList.equals("DISABLE")) {
-                    logger.warn("The request made from {} was not in the whitelist and will be ignored.", requestIP);
-                    return;
-                } else if ("GET".equalsIgnoreCase(httpRequest.method().toString())) {
+                if (!whiteList.equals("DISABLE")) {
+                    String requestIP = "("
+                            + ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress() + ")";
+                    if (!whiteList.contains(requestIP)) {
+                        logger.warn("The request made from {} was not in the whitelist and will be ignored.",
+                                requestIP);
+                        return;
+                    }
+                }
+                if ("GET".equalsIgnoreCase(httpRequest.method().toString())) {
                     // Some browsers send a query string after the path when refreshing a picture.
                     QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri());
                     switch (queryStringDecoder.path()) {
@@ -147,6 +149,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                         case "/instar":
                             InstarHandler instar = new InstarHandler(ipCameraHandler);
                             instar.alarmTriggered(httpRequest.uri().toString());
+                            ctx.close();
                             break;
                         case "/ipcamera0.ts":
                             TimeUnit.SECONDS.sleep(6);
@@ -201,13 +204,10 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             ipCameraHandler.sendMjpegFrame(incomingJpeg, ipCameraHandler.mjpegChannelGroup);
                         }
                     }
-                    // incomingJpeg = null;
                     recievedBytes = 0;
                 }
             }
-        } finally
-
-        {
+        } finally {
             ReferenceCountUtil.release(msg);
         }
     }
