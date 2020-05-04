@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.openhab.binding.ipcamera.handler.IpCameraHandler;
 import org.slf4j.Logger;
@@ -124,15 +125,24 @@ public class Ffmpeg {
             } catch (IOException e) {
                 logger.error("{}", e.toString());
             } finally {
-                if ("GIF".contentEquals(format)) {
-                    logger.debug("Animated GIF has been created and is ready for use.");
-                    try {
-                        // Without a small delay, Pushover sends no file 10% of time.
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-
-                    }
-                    ipCameraHandler.setChannelState(CHANNEL_UPDATE_GIF, OnOffType.valueOf("OFF"));
+                switch (format) {
+                    case "GIF":
+                        logger.debug("Animated GIF has been created and is ready for use.");
+                        try {
+                            // Without a small delay, Pushover sends no file 10% of time.
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                        }
+                        ipCameraHandler.setChannelState(CHANNEL_UPDATE_GIF, OnOffType.valueOf("OFF"));
+                        break;
+                    case "RECORD":
+                        logger.debug("MP4 has been created and is ready for use.");
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                        }
+                        ipCameraHandler.setChannelState(CHANNEL_RECORD_MP4, DecimalType.ZERO);
+                        break;
                 }
             }
         }

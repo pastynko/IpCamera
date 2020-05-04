@@ -73,6 +73,10 @@ public class IpCameraBindingConstants {
     // List of all Channel ids
     public static final String CHANNEL_UPDATE_IMAGE_NOW = "updateImageNow";
     public static final String CHANNEL_UPDATE_GIF = "updateGif";
+    public static final String CHANNEL_GIF_FILENAME = "gifFilename";
+    public static final String CHANNEL_RECORD_MP4 = "recordMp4";
+    public static final String CHANNEL_MP4_PREROLL = "mp4Preroll";
+    public static final String CHANNEL_MP4_FILENAME = "mp4Filename";
     public static final String CHANNEL_IMAGE = "image";
     public static final String CHANNEL_RTSP_URL = "rtspUrl";
     public static final String CHANNEL_IMAGE_URL = "imageUrl";

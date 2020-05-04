@@ -100,7 +100,11 @@
 		<channels>
 		<channel id="image" typeId="image"/>
 		<channel id="updateImageNow" typeId="updateImageNow"/>
-		<channel id="updateGif" typeId="updateGif"/>		
+		<channel id="updateGif" typeId="updateGif"/>
+		<channel id="recordMp4" typeId="recordMp4"/>
+		<channel id="mp4Preroll" typeId="mp4Preroll"/>
+        <channel id="mp4Filename" typeId="mp4Filename"/>
+		<channel id="gifFilename" typeId="gifFilename"/>		
 		<channel id="controlMotionAlarm" typeId="controlMotionAlarm"/>
 		<channel id="motionAlarm" typeId="motionAlarm"/>
 		<channel id="lastMotionType" typeId="lastMotionType"/>		
@@ -308,20 +312,23 @@ The Image channel and JPG served on request can be set to update in a number of 
 </parameter>
 </config-description>
 </thing-type>
-
 	<thing-type id="ONVIF">
 		<label>"ONVIF" Generic IP camera with ONVIF support.</label>
 		<description>Use when the binding does not list your brand of ONVIF compatible Camera</description>
 		<channels>
 		<channel id="image" typeId="image"/>
 		<channel id="updateImageNow" typeId="updateImageNow"/>
-		<channel id="updateGif" typeId="updateGif"/>		
+		<channel id="updateGif" typeId="updateGif"/>
+		<channel id="gifFilename" typeId="gifFilename"/>
+		<channel id="recordMp4" typeId="recordMp4"/>
+		<channel id="mp4Preroll" typeId="mp4Preroll"/>
+        <channel id="mp4Filename" typeId="mp4Filename"/>		
 		<channel id="controlMotionAlarm" typeId="controlMotionAlarm"/>
 		<channel id="externalMotion" typeId="externalMotion"/>
-<channel id="motionAlarm" typeId="motionAlarm"/>
-<channel id="lastMotionType" typeId="lastMotionType"/>   
-<channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
-<channel id="audioAlarm" typeId="audioAlarm"/>
+        <channel id="motionAlarm" typeId="motionAlarm"/>
+        <channel id="lastMotionType" typeId="lastMotionType"/>   
+        <channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
+        <channel id="audioAlarm" typeId="audioAlarm"/>
 		<channel id="pan" typeId="pan"/>
 		<channel id="tilt" typeId="tilt"/>
 		<channel id="zoom" typeId="zoom"/>
@@ -529,14 +536,17 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 </config-description>
 </thing-type>
-
 	<thing-type id="AMCREST">
 		<label>"AMCREST" IP camera with ONVIF and API support.</label>
 		<description>Use for all current Amcrest Cameras, as they support an API as well as ONVIF.</description>
 		<channels>
 		<channel id="image" typeId="image"/>
 			<channel id="updateImageNow" typeId="updateImageNow"/>
-			<channel id="updateGif" typeId="updateGif"/>					
+			<channel id="updateGif" typeId="updateGif"/>
+			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="recordMp4" typeId="recordMp4"/>
+			<channel id="mp4Preroll" typeId="mp4Preroll"/>
+            <channel id="mp4Filename" typeId="mp4Filename"/>					
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="motionAlarm" typeId="motionAlarm"/>
@@ -760,13 +770,16 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 </config-description>
 </thing-type>
-
 	<thing-type id="DAHUA">
 		<label>"DAHUA" IP camera with ONVIF and API support.</label>
 		<description>Use for all current DAHUA Cameras, as they support an API as well as ONVIF.</description>
 		<channels>
 			<channel id="updateImageNow" typeId="updateImageNow"/>
 			<channel id="updateGif" typeId="updateGif"/>
+			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="recordMp4" typeId="recordMp4"/>
+			<channel id="mp4Preroll" typeId="mp4Preroll"/>
+            <channel id="mp4Filename" typeId="mp4Filename"/>
 			<channel id="image" typeId="image"/>			
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
@@ -1004,13 +1017,16 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 </config-description>
 </thing-type>
-
 	<thing-type id="DOORBIRD">
 		<label>"DOORBIRD" IP camera with ONVIF and API support.</label>
 		<description>Use for all current Doorbird Cameras, as they support an API as well as ONVIF.</description>
 		<channels>
 			<channel id="updateImageNow" typeId="updateImageNow"/>
 			<channel id="updateGif" typeId="updateGif"/>
+			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="recordMp4" typeId="recordMp4"/>
+			<channel id="mp4Preroll" typeId="mp4Preroll"/>
+            <channel id="mp4Filename" typeId="mp4Filename"/>
 			<channel id="image" typeId="image"/>
 			<channel id="externalMotion" typeId="externalMotion"/>			
 			<channel id="motionAlarm" typeId="motionAlarm"/>
@@ -1217,14 +1233,17 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 </config-description>
 </thing-type>
-
 	<thing-type id="FOSCAM">
 		<label>"FOSCAM" IP camera with ONVIF and API support.</label>
 		<description>Use for all current HD FOSCAM Cameras as they support an API as well as ONVIF.</description>
 		<channels>
 		<channel id="updateImageNow" typeId="updateImageNow"/>
 		<channel id="updateGif" typeId="updateGif"/>
-			<channel id="image" typeId="image"/>
+		<channel id="gifFilename" typeId="gifFilename"/>
+		<channel id="recordMp4" typeId="recordMp4"/>
+		<channel id="mp4Preroll" typeId="mp4Preroll"/>
+        <channel id="mp4Filename" typeId="mp4Filename"/>
+		<channel id="image" typeId="image"/>
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="motionAlarm" typeId="motionAlarm"/>
@@ -1454,13 +1473,16 @@ The Image channel and JPG served on request can be set to update in a number of 
 
 </config-description>
 </thing-type>
-
 	<thing-type id="HIKVISION">
 		<label>"HIKVISION" IP camera with ONVIF and API support.</label>
 		<description>Use for all current Hikvision Cameras as they support an API as well as ONVIF.</description>
 		<channels>
 			<channel id="updateImageNow" typeId="updateImageNow"/>
 			<channel id="updateGif" typeId="updateGif"/>
+			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="recordMp4" typeId="recordMp4"/>
+			<channel id="mp4Preroll" typeId="mp4Preroll"/>
+            <channel id="mp4Filename" typeId="mp4Filename"/>
 			<channel id="image" typeId="image"/>			
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
@@ -1699,6 +1721,10 @@ The Image channel and JPG served on request can be set to update in a number of 
 		<channels>
 			<channel id="updateImageNow" typeId="updateImageNow"/>
 			<channel id="updateGif" typeId="updateGif"/>
+			<channel id="gifFilename" typeId="gifFilename"/>
+			<channel id="recordMp4" typeId="recordMp4"/>
+			<channel id="mp4Preroll" typeId="mp4Preroll"/>
+            <channel id="mp4Filename" typeId="mp4Filename"/>
 			<channel id="image" typeId="image"/>
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
@@ -1911,24 +1937,54 @@ The Image channel and JPG served on request can be set to update in a number of 
 </config-description>
 </thing-type>
 
+<channel-type id="image">
+<item-type>Image</item-type>
+<label>Snapshot from camera</label>
+<description>Low frame rate and low bandwidth to keep demands on your internet connection low when using to remote view.</description>
+<category>Camera</category>
+</channel-type>
+
 <channel-type id="updateImageNow">
 <item-type>Switch</item-type>
 <label>Update the Image</label>
 <description>This can be used to trigger snapshot updates when an external PIR, button or other form of sensor turns this channel ON.</description>
 </channel-type>
 
+<channel-type id="gifFilename">
+<item-type>String</item-type>
+<label>GIF filename</label>
+<description>The filename you wish the GIF to be named with.</description>
+<category>Text</category>
+</channel-type>
+
 <channel-type id="updateGif">
 <item-type>Switch</item-type>
-<label>Create an animated GIF</label>
+<label>Create GIF</label>
 <description>Turn ON to create an animated GIF called ipcamera.gif with ffmpeg. When the file is created the switch will move itself back to OFF.</description>
+</channel-type>
+
+<channel-type id="mp4Filename">
+<item-type>String</item-type>
+<label>MP4 Filename</label>
+<description>The filename you wish the MP4 to be named with.</description>
+<category>Text</category>
+</channel-type>
+
+<channel-type id="recordMp4">
+<item-type>Number</item-type>
+<label>Record to MP4</label>
+<description>Set this channel to a number of how many seconds you wish to record for. When the file is created the channel will change to 0 by itself.</description>
+<category>Time</category>
+<state min="0" max="10800" step="1" pattern="%.1f Seconds" readOnly="false" />
+</channel-type>
+
+<channel-type id="mp4Preroll">
+<item-type>Number</item-type>
+<label>MP4 preroll</label>
+<description>Set this channel to a number of how many seconds you wish to record for using the HLS files as a source.</description>
+<category>Time</category>
+<state min="0" max="10" step="1" pattern="%.1f Seconds" readOnly="false" />
 </channel-type>		
-		
-		<channel-type id="image">
-		<item-type>Image</item-type>
-		<label>Snapshot from camera</label>
-		<description>Low frame rate and low bandwidth to keep demands on your internet connection low when using to remote view.</description>
-		<category>Camera</category>
-		</channel-type>
 	
 		<channel-type id="imageUrl">
 		<item-type>String</item-type>
@@ -1960,14 +2016,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 		<description>A link you can use in Openhab to cast video feeds.</description>
 		<category>Camera</category>
 		<state readOnly="true" />
-		</channel-type>
-		
-		<channel-type id="lastMotionType">
-		<item-type>String</item-type>
-		<label>Last Motion Type</label>
-		<description>A string that contains the type of motion alarm that was last triggered.</description>
-		<state readOnly="true" />
-		</channel-type>
+		</channel-type>			
 	
 		<channel-type id="pan">
 		<item-type>Dimmer</item-type>
@@ -1989,6 +2038,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 		<description>Zoom the camera to an absolute value.</description>
 		<category>Zoom</category>
 		</channel-type>
+		
+		<channel-type id="lastMotionType">
+        <item-type>String</item-type>
+        <label>Last Motion Type</label>
+        <description>A string that contains the type of motion alarm that was last triggered.</description>
+        <state readOnly="true" />
+        </channel-type>
 		
 		<channel-type id="motionAlarm">
 		<item-type>Switch</item-type>
@@ -2104,7 +2160,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 		<category>Motion</category>
 		</channel-type>
 		
-		<channel-type id="externalMotion">
+<channel-type id="externalMotion">
 <item-type>Switch</item-type>
 <label>Externally trigger the Motion Alarm</label>
 <description>Use other sensors external to the camera like a ZWave PIR sensor to flag that the camera has motion in its field of view.</description>
@@ -2155,13 +2211,13 @@ The Image channel and JPG served on request can be set to update in a number of 
 		
 		<channel-type id="startStream">
 <item-type>Switch</item-type>
-<label>Create segments for casting/streaming</label>
+<label>Start HLS</label>
 <description>Lower the delay to start casting the camera by creating the files non stop in case they are needed.</description>
 </channel-type>
 		
 		<channel-type id="enableLED">
 		<item-type>Dimmer</item-type>
-		<label>Enable/Disable/Dim the Infrared LED</label>
+		<label>Enable/Disable/Dim the IR LED</label>
 		<description>Turn the LED on and off and if supported allow Dimming.</description>
 		<category>Light</category>
 		</channel-type>
