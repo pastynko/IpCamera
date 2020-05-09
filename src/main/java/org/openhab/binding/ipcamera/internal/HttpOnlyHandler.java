@@ -69,7 +69,7 @@ public class HttpOnlyHandler extends ChannelDuplexHandler {
                 }
                 ipCameraHandler.setupFfmpegFormat("RTSPHELPER");
                 return;
-            case CHANNEL_CONTROL_MOTION_ALARM:
+            case CHANNEL_FFMPEG_MOTION_CONTROL:
                 if ("ON".equals(command.toString())) {
                     ipCameraHandler.motionAlarmEnabled = true;
                 } else if ("OFF".equals(command.toString()) || "0".equals(command.toString())) {

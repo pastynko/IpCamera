@@ -224,6 +224,19 @@ public class AmcrestHandler extends ChannelDuplexHandler {
                     ipCameraHandler.sendHttpGET("/cgi-bin/configManager.cgi?action=setConfig&AlarmOut[1].Mode=0");
                 }
                 return;
+            case CHANNEL_FFMPEG_MOTION_CONTROL:
+                if ("ON".equals(command.toString())) {
+                    ipCameraHandler.motionAlarmEnabled = true;
+                } else if ("OFF".equals(command.toString()) || "0".equals(command.toString())) {
+                    ipCameraHandler.motionAlarmEnabled = false;
+                    ipCameraHandler.noMotionDetected(CHANNEL_MOTION_ALARM);
+                } else {
+                    ipCameraHandler.motionAlarmEnabled = true;
+                    ipCameraHandler.motionThreshold = Double.valueOf(command.toString());
+                    ipCameraHandler.motionThreshold = ipCameraHandler.motionThreshold / 10000;
+                }
+                ipCameraHandler.setupFfmpegFormat("RTSPHELPER");
+                return;
         }
     }
 

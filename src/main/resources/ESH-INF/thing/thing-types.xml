@@ -105,7 +105,7 @@
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
         <channel id="mp4Filename" typeId="mp4Filename"/>
 		<channel id="gifFilename" typeId="gifFilename"/>		
-		<channel id="controlMotionAlarm" typeId="controlMotionAlarm"/>
+		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 		<channel id="motionAlarm" typeId="motionAlarm"/>
 		<channel id="lastMotionType" typeId="lastMotionType"/>		
         <channel id="thresholdAudioAlarm" typeId="thresholdAudioAlarm"/>
@@ -323,7 +323,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 		<channel id="recordMp4" typeId="recordMp4"/>
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
         <channel id="mp4Filename" typeId="mp4Filename"/>		
-		<channel id="controlMotionAlarm" typeId="controlMotionAlarm"/>
+		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 		<channel id="externalMotion" typeId="externalMotion"/>
         <channel id="motionAlarm" typeId="motionAlarm"/>
         <channel id="lastMotionType" typeId="lastMotionType"/>   
@@ -546,7 +546,8 @@ The Image channel and JPG served on request can be set to update in a number of 
 			<channel id="gifFilename" typeId="gifFilename"/>
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
-            <channel id="mp4Filename" typeId="mp4Filename"/>					
+            <channel id="mp4Filename" typeId="mp4Filename"/>
+            <channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>					
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="motionAlarm" typeId="motionAlarm"/>
@@ -780,7 +781,8 @@ The Image channel and JPG served on request can be set to update in a number of 
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
-			<channel id="image" typeId="image"/>			
+			<channel id="image" typeId="image"/>
+			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>			
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="motionAlarm" typeId="motionAlarm"/>
@@ -1028,6 +1030,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
 			<channel id="image" typeId="image"/>
+			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 			<channel id="externalMotion" typeId="externalMotion"/>			
 			<channel id="motionAlarm" typeId="motionAlarm"/>
 			<channel id="lastMotionType" typeId="lastMotionType"/>
@@ -1244,6 +1247,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 		<channel id="mp4Preroll" typeId="mp4Preroll"/>
         <channel id="mp4Filename" typeId="mp4Filename"/>
 		<channel id="image" typeId="image"/>
+		<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="motionAlarm" typeId="motionAlarm"/>
@@ -1483,7 +1487,8 @@ The Image channel and JPG served on request can be set to update in a number of 
 			<channel id="recordMp4" typeId="recordMp4"/>
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
-			<channel id="image" typeId="image"/>			
+			<channel id="image" typeId="image"/>
+			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>			
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="motionAlarm" typeId="motionAlarm"/>
@@ -1726,6 +1731,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 			<channel id="mp4Preroll" typeId="mp4Preroll"/>
             <channel id="mp4Filename" typeId="mp4Filename"/>
 			<channel id="image" typeId="image"/>
+			<channel id="ffmpegMotionControl" typeId="ffmpegMotionControl"/>
 			<channel id="enableMotionAlarm" typeId="enableMotionAlarm"/>
 			<channel id="externalMotion" typeId="externalMotion"/>
 			<channel id="enablePirAlarm" typeId="enablePirAlarm"/>
@@ -2167,7 +2173,7 @@ The Image channel and JPG served on request can be set to update in a number of 
 <category>Motion</category>
 </channel-type>
 		
-		<channel-type id="controlMotionAlarm">
+		<channel-type id="ffmpegMotionControl">
 		<item-type>Dimmer</item-type>
 		<label>Enable/Disable/Threshold for the Motion Alarm</label>
 		<description>Enable/Disable the motion alarm and control the sensitivity.</description>
