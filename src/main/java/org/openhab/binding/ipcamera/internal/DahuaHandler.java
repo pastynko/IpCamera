@@ -141,6 +141,12 @@ public class DahuaHandler extends ChannelDuplexHandler {
             } else if (content.contains("Code=AlarmLocal;action=Stop;index=1")) {
                 ipCameraHandler.setChannelState(CHANNEL_EXTERNAL_ALARM_INPUT2, OnOffType.valueOf("OFF"));
             }
+            // CrossLineDetection alarm on/off
+            if (content.contains("table.VideoAnalyseRule[0][1].Enable=true")) {
+                ipCameraHandler.setChannelState(CHANNEL_ENABLE_LINE_CROSSING_ALARM, OnOffType.valueOf("ON"));
+            } else if (content.contains("table.VideoAnalyseRule[0][1].Enable=false")) {
+                ipCameraHandler.setChannelState(CHANNEL_ENABLE_LINE_CROSSING_ALARM, OnOffType.valueOf("OFF"));
+            }
         } finally {
             ReferenceCountUtil.release(msg);
             content = null;
@@ -168,8 +174,7 @@ public class DahuaHandler extends ChannelDuplexHandler {
                     ipCameraHandler.sendHttpGET("/cgi-bin/configManager.cgi?action=getConfig&name=AudioDetect[0]");
                     return;
                 case CHANNEL_ENABLE_LINE_CROSSING_ALARM:
-                    ipCameraHandler
-                            .sendHttpGET("/cgi-bin/configManager.cgi?action=getConfig&name=CrossLineDetection[0]");
+                    ipCameraHandler.sendHttpGET("/cgi-bin/configManager.cgi?action=getConfig&name=VideoAnalyseRule");
                     return;
                 case CHANNEL_ENABLE_MOTION_ALARM:
                     ipCameraHandler.sendHttpGET("/cgi-bin/configManager.cgi?action=getConfig&name=MotionDetect[0]");
@@ -238,9 +243,11 @@ public class DahuaHandler extends ChannelDuplexHandler {
                 return;
             case CHANNEL_ENABLE_LINE_CROSSING_ALARM:
                 if ("ON".equals(command.toString())) {
-
+                    ipCameraHandler.sendHttpGET(
+                            "/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][1].Enable=true");
                 } else {
-
+                    ipCameraHandler.sendHttpGET(
+                            "/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][1].Enable=false");
                 }
                 return;
             case CHANNEL_ENABLE_MOTION_ALARM:

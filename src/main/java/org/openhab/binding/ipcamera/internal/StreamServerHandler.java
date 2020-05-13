@@ -85,7 +85,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
         try {
             if (msg instanceof HttpRequest) {
                 HttpRequest httpRequest = (HttpRequest) msg;
-                logger.debug("Stream Server recieved request \t{}:{}", httpRequest.method(), httpRequest.uri());
+                // logger.debug("Stream Server recieved request \t{}:{}", httpRequest.method(), httpRequest.uri());
                 if (!whiteList.equals("DISABLE")) {
                     String requestIP = "("
                             + ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress() + ")";
@@ -96,6 +96,7 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                     }
                 }
                 if ("GET".equalsIgnoreCase(httpRequest.method().toString())) {
+                    logger.debug("Stream Server recieved request \tGET:{}", httpRequest.uri());
                     // Some browsers send a query string after the path when refreshing a picture.
                     QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri());
                     switch (queryStringDecoder.path()) {
@@ -155,14 +156,14 @@ public class StreamServerHandler extends ChannelInboundHandlerAdapter {
                             TimeUnit.SECONDS.sleep(6);
                         default:
                             if (httpRequest.uri().contains(".ts")) {
-                                sendFile(ctx, httpRequest.uri(), "video/MP2T");
+                                sendFile(ctx, queryStringDecoder.path(), "video/MP2T");
                             } else if (httpRequest.uri().contains(".jpg")) {
                                 // Allow access to the preroll and postroll jpg files
-                                sendFile(ctx, httpRequest.uri(), "image/jpg");
+                                sendFile(ctx, queryStringDecoder.path(), "image/jpg");
                             } else if (httpRequest.uri().contains(".m4s")) {
-                                sendFile(ctx, httpRequest.uri(), "video/mp4");
+                                sendFile(ctx, queryStringDecoder.path(), "video/mp4");
                             } else if (httpRequest.uri().contains(".mp4")) {
-                                sendFile(ctx, httpRequest.uri(), "video/mp4");
+                                sendFile(ctx, queryStringDecoder.path(), "video/mp4");
                             }
                     }
                 } else if ("POST".equalsIgnoreCase(httpRequest.method().toString())) {

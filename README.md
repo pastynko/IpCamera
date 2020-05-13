@@ -730,9 +730,9 @@ The binding can now use FFmpeg to create a recording to a file.
 To do this:
 + Consider setting the String channel that is called `mp4Filename` to a date and time stamp in a format that you like, or leave the channel empty for the filename to default to `ipcamera.mp4`.
 + Change the Number channel called `recordMp4` to a number of how many seconds that you wish to record for. The recording will then start.
-+ Once the file is created the channel `recordMp4` will change itself back to 0 which can be used to trigger a rule to send the file, or you could use this event to change the filename for the next recording.
++ Once the file is created the channel `recordMp4` will change itself back to 0 which can be used to trigger a rule to send the file, or you could use this event to change a counter variable that is used in the filename to create `visitor1.mp4 visitor2.mp4`.
 
-ITEMS
+*.items
 
 ```java
 Switch BackyardCamExternalMotion "External Motion" { channel="ipcamera:HIKVISION:BackyardCam:externalMotion" }
@@ -741,7 +741,7 @@ Number BackyardCamRecordMp4 "Backyard seconds to Record" { channel="ipcamera:HIK
 
 ```
 
-RULES
+*.rules
 
 ```java
 
@@ -958,7 +958,16 @@ Some browsers require larger segment sizes to prevent choppy playback, this can 
 
 **Animated GIF feature**
 
-The cameras have a channel called `updateGif` and when this switch is turned 'ON' (either by a rule or manually) the binding will create an animated GIF called ipcamera.gif in the ffmpeg output folder. Once the file is created the switch will turn 'OFF' and this can be used to trigger a rule to send the picture via email, pushover or telegram messages. This feature saves you from using sleep commands in your rules to ensure a file is created as the control only turns off when the file is actually created. The switch can be turned on with a rule triggered by an external zwave PIR sensor or the cameras own motion alarm, the choice and the logic can be created by yourself. The feature has two options called preroll and postroll to be aware of. When preroll is 0 (the default) the binding will use the RTSP stream to fetch the amount of seconds specified in the postroll config to create the GIF from. By changing to a preroll value above 0 the binding will change to using snapshots as the source and this requires the jpeg to be updating. The time between the snapshots is the polling time of the camera (2 seconds by default) and can be raised or lowered to 1 second if you desire. The snapshots are saved to disk and can be used as a feature that is described in the snapshot section above in more detail.
+This binding has a channel called `updateGif` and when this switch is turned 'ON' (either by a rule or manually) the binding will create an animated GIF called ipcamera.gif in the ffmpeg output folder.
+You can change the filename using the string channel that is called `gifFilename` and an example of how to use this in a rule can be seen under the MP4 recording section.
+Once the file is created the switch will turn 'OFF' and this can be used to trigger a rule to send the picture via email, pushover or telegram messages. 
+This feature saves you from using sleep commands in your rules to ensure a file is created, as the control only turns off when the file is actually created.
+The switch can be turned on with a rule triggered by an external zwave PIR sensor or the cameras own motion alarm, the choice and the logic can be created by yourself.
+The feature has two options called preroll and postroll to be aware of.
+When preroll is 0 (the default) the binding will use the RTSP stream to fetch the amount of seconds specified in the postroll config to create the GIF from.
+By changing to a preroll value above 0 the binding will change to using snapshots as the source and this requires the jpeg to be updating.
+The time between the snapshots is the polling time of the camera (2 seconds by default) and can be raised or lowered to 1 second if you desire.
+The snapshots are saved to disk and can be used as a feature that is described in the snapshot section above in more detail.
 
 You can request the gif by using this url, or by the path to where the file is stored:
 
@@ -999,7 +1008,7 @@ The full example section has an example of how to setup a group display.
 Some additional things to check to get it working are:
 
 + Currently the poll time of the group must be the same or less than the total time contained in each cameras m3u8 files.
-If you have 3 seconds worth of video segments, this is the max time you can set to the Poll time to.
+If you have 3 seconds worth of video segments in the cameras HLS stream, this is the max time you can set to the Poll time of the group to.
 If your not using HLS and are just using ipcamera.jpg to display the groups picture with, then the poll time can be set to a wider range.
 + All cameras should have the same HLS segment size setting. 1 and 2 second long segments have been tested to work.
 
