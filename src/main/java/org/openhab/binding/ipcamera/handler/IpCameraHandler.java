@@ -894,7 +894,7 @@ public class IpCameraHandler extends BaseThingHandler {
                             switch (thing.getThingTypeUID().getId()) {
                                 case "DAHUA":
                                     urlToKeepOpen = listOfRequests.get(indexInLists);
-                                    if ("/cgi-bin/eventManager.cgi?action=attach&codes=[All]"
+                                    if ("/cgi-bin/eventManager.cgi?action=attach&codes=[All]&heartbeat=1"
                                             .contentEquals(urlToKeepOpen)) {
                                         return;
                                     }
@@ -1784,9 +1784,9 @@ public class IpCameraHandler extends BaseThingHandler {
                     break;
                 case "DAHUA":
                     // Check for alarms, channel for NVRs appears not to work at filtering.
-                    if (streamIsStopped("/cgi-bin/eventManager.cgi?action=attach&codes=[All]")) {
+                    if (streamIsStopped("/cgi-bin/eventManager.cgi?action=attach&codes=[All]&heartbeat=1")) {
                         logger.info("The alarm stream was not running for camera {}, re-starting it now", ipAddress);
-                        sendHttpGET("/cgi-bin/eventManager.cgi?action=attach&codes=[All]");
+                        sendHttpGET("/cgi-bin/eventManager.cgi?action=attach&codes=[All]&heartbeat=1");
                     }
                     break;
                 case "DOORBIRD":
